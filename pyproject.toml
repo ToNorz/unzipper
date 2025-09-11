@@ -9,19 +9,13 @@ dependencies = [
   "aiohttp==3.12.15",
   "aiosqlite==0.21.0",
   "base58check==1.0.2",
-  "dnspython==2.8.0",
-  "gitdb==4.0.12",
   "GitPython==3.1.45",
-  "motor==3.7.1",
-  "mutagen==1.47.0",
   "Pillow==11.3.0",
   "psutil==7.0.0",
+  "pymongo==4.15.0",
   "pyrofork==2.3.68",
   "PyTgCrypto==1.2.11",
-  "requests==2.32.5",
-  "setuptools==80.9.0",
   "unzip-http==0.6",
-  "wheel==0.46.1",
 ]
 requires-python = ">=3.10"
 readme = "README.md"

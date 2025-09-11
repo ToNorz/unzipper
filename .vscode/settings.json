@@ -45,11 +45,14 @@
   "python.analysis.languageServerMode": "full",
   "python.analysis.supportDocstringTemplate": true,
   "python.analysis.supportRestructuredText": true,
-  "python.analysis.typeCheckingMode": "strict",
+  "python.analysis.typeCheckingMode": "standard",
   "python.createEnvironment.trigger": "off",
   "python.missingPackage.severity": "Warning",
   "python.terminal.focusAfterLaunch": true,
   "python.terminal.shellIntegration.enabled": true,
+  "search.exclude": {
+    "uv.lock": true,
+  },
   "togglequotes.chars": [
     "'",
     "\"",

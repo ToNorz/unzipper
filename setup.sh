@@ -12,6 +12,55 @@ red=$(tput setaf 1)
 reset=$(tput sgr0)
 yellow=$(tput setaf 3)
 
+# UI charset init (fallback if no UTF-8 or forced)
+USE_ASCII=0
+if [[ ${UNZIP_BOT_ASCII:-0} -eq 1 ]]; then
+  USE_ASCII=1
+elif [[ ${LANG:-} != *UTF-8* && ${LC_CTYPE:-} != *UTF-8* ]]; then
+  USE_ASCII=1
+fi
+[[ $TERM == "dumb" ]] && USE_ASCII=1
+
+init_ui_chars() {
+  if [[ $USE_ASCII -eq 1 ]]; then
+    TL='+' TR='+' BL='+' BR='+' H='-' V='|'
+  else
+    TL='╭' TR='╮' BL='╰' BR='╯' H='─' V='│'
+  fi
+}
+init_ui_chars
+
+# width helpers
+# Return 0 (false) / 1 (true) in $? whether codepoint is wide (2 columns)
+is_wide() {
+  local codepoint=$1
+  # East Asian Wide / Fullwidth core ranges + common emoji blocks (no ambiguous)
+  if ((codepoint>=0x1100 && codepoint<=0x115F))  || \
+     ((codepoint>=0x2329 && codepoint<=0x232A))  || \
+     ((codepoint>=0x2E80 && codepoint<=0x303E))  || \
+     ((codepoint>=0x3040 && codepoint<=0xA4CF))  || \
+     ((codepoint>=0xAC00 && codepoint<=0xD7A3))  || \
+     ((codepoint>=0xF900 && codepoint<=0xFAFF))  || \
+     ((codepoint>=0xFE10 && codepoint<=0xFE19))  || \
+     ((codepoint>=0xFE30 && codepoint<=0xFE6F))  || \
+     ((codepoint>=0xFF00 && codepoint<=0xFF60))  || \
+     ((codepoint>=0xFFE0 && codepoint<=0xFFE6))  || \
+     ((codepoint>=0x1F300 && codepoint<=0x1F64F)) || \
+     ((codepoint>=0x1F900 && codepoint<=0x1F9FF)); then
+    return 0
+  fi
+  return 1
+}
+
+is_zero_width() {
+  local codepoint=$1
+  # VS16, ZWJ, skin tone modifiers
+  if (( codepoint==0xFE0F || codepoint==0x200D || (codepoint>=0x1F3FB && codepoint<=0x1F3FF) )); then
+    return 0
+  fi
+  return 1
+}
+
 # Draw a box around text
 print_box() {
   local txt="$1"
@@ -24,9 +73,9 @@ print_box() {
 
   for line in "${!lines[@]}"; do
     local raw="${lines[line]}"
-    local disp=0 prev_code=0 fudge=0
+    local disp=0
 
-    # read each code‑point (UTF‑8 locale)
+    # read each code‑point
     while IFS= read -r -n1 ch; do
       [[ -z $ch ]] && break
 
@@ -35,82 +84,52 @@ print_box() {
       code=$(printf '%d' "'$ch")
 
       # skip zero‑width joiner
-      if ((code == 0x200D)); then
+      if is_zero_width "$code"; then
         continue
       fi
 
-      # if it's VS‑16, only pad if the base wasn't already counted as "wide"
-      if ((code == 0xFE0F)); then
-        if (((\
-          prev_code >= 0x1100 && prev_code <= 0x115F) || (\
-          prev_code >= 0x2329 && prev_code <= 0x232A) || (\
-          prev_code >= 0x2E80 && prev_code <= 0xA4CF) || (\
-          prev_code >= 0xAC00 && prev_code <= 0xD7A3) || (\
-          prev_code >= 0xF900 && prev_code <= 0xFAFF) || (\
-          prev_code >= 0xFE10 && prev_code <= 0xFE19) || (\
-          prev_code >= 0xFE30 && prev_code <= 0xFE6F) || (\
-          prev_code >= 0xFF00 && prev_code <= 0xFF60) || (\
-          prev_code >= 0xFFE0 && prev_code <= 0xFFE6) || (\
-          prev_code >= 0x2600 && prev_code <= 0x26FF) || (\
-          prev_code >= 0x2700 && prev_code <= 0x27BF) || (\
-          prev_code >= 0x1F300 && prev_code <= 0x1F5FF) || (\
-          prev_code >= 0x1F600 && prev_code <= 0x1F64F) || (\
-          prev_code >= 0x1F900 && prev_code <= 0x1F9FF))) \
-            ; then
-          fudge=-1
-        fi
-
-        continue
-      fi
-
-      # classify wide vs narrow
-      if (((\
-        code >= 0x1100 && code <= 0x115F) || (\
-        code >= 0x2329 && code <= 0x232A) || (\
-        code >= 0x2E80 && code <= 0xA4CF) || (\
-        code >= 0xAC00 && code <= 0xD7A3) || (\
-        code >= 0xF900 && code <= 0xFAFF) || (\
-        code >= 0xFE10 && code <= 0xFE19) || (\
-        code >= 0xFE30 && code <= 0xFE6F) || (\
-        code >= 0xFF00 && code <= 0xFF60) || (\
-        code >= 0xFFE0 && code <= 0xFFE6) || (\
-        code >= 0x2600 && code <= 0x26FF) || (\
-        code >= 0x2700 && code <= 0x27BF) || (\
-        code >= 0x1F300 && code <= 0x1F5FF) || (\
-        code >= 0x1F600 && code <= 0x1F64F) || (\
-        code >= 0x1F900 && code <= 0x1F9FF))) \
-          ; then
-        disp=$((disp + 2))
+      if is_wide "$code"; then
+        ((disp+=2))
       else
-        disp=$((disp + 1))
+        ((disp++))
       fi
-
-      prev_code=$code
     done <<<"$raw"
 
-    # tack on that single‑column VS‑16 fudge where needed
-    disp=$((disp + fudge))
-
     disp_lens[line]=$disp
-    ((disp > max)) && max=$disp
+    ((disp>max)) && max=$disp
   done
 
-  local border=$((max + 4))
+  local inner=$max
+  local border=$((inner + 4))
+
   # top border
-  printf "\n${bold}${color}╭%*s╮\n" "$border" '' | tr ' ' '─'
+  if [[ $USE_ASCII -eq 1 ]]; then
+    printf "\n${bold}${color}%s" "$TL"
+    printf "%*s" "$((border-2))" "" | tr ' ' "$H"
+    printf "%s\n" "$TR"
+  else
+    printf "\n${bold}${color}%s%*s%s\n" "$TL" "$((border-2))" '' "$TR" | tr ' ' "$H"
+  fi
 
   # centered lines
   for i in "${!lines[@]}"; do
     local line="${lines[i]}"
     local dlen=${disp_lens[i]}
-    local pad=$((max - dlen))
+    local pad=$((inner - dlen))
+    ((pad<0)) && pad=0
     local left=$((pad / 2))
     local right=$((pad - left))
-    printf "│${reset}%*s%s%*s${color}│\n" $((left + 2)) "" "$line" $((right + 2)) ""
+    printf "%s${reset}%*s%s%*s${color}%s\n" "$V" $((left + 1)) "" "$line" $((right + 1)) "" "$V"
   done
 
   # bottom border
-  printf "╰%*s╯${reset}\n\n" "$border" '' | tr ' ' '─'
+  if [[ $USE_ASCII -eq 1 ]]; then
+    printf "%s" "$BL"
+    printf "%*s" "$((border-2))" "" | tr ' ' "$H"
+    printf "%s${reset}\n\n" "$BR"
+  else
+    printf "%s%*s%s${reset}\n\n" "$BL" "$((border-2))" '' "$BR" | tr ' ' "$H"
+  fi
 }
 
 # Validate variable against regex

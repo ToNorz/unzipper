@@ -1,15 +1,13 @@
 from base import DatabaseInterface, TableInterface
-from motor.motor_asyncio import (
-    AsyncIOMotorClient,
-    AsyncIOMotorCollection,
-    AsyncIOMotorCursor,
-    AsyncIOMotorDatabase,
-)
+from pymongo import AsyncMongoClient
+from pymongo.asynchronous.collection import AsyncCollection
+from pymongo.asynchronous.cursor import AsyncCursor
+from pymongo.asynchronous.database import AsyncDatabase
 
 
 class MongoTable(TableInterface):
     def __init__(self, collection) -> None:
-        self.collection: AsyncIOMotorCollection = collection
+        self.collection: AsyncCollection = collection
 
     async def count(self, filter: dict | None = None) -> int:
         filter = filter or {}
@@ -20,7 +18,7 @@ class MongoTable(TableInterface):
         return await self.collection.find_one(filter=query)
 
     async def get_all(self) -> list:
-        cursor: AsyncIOMotorCursor = self.collection.find({})
+        cursor: AsyncCursor = self.collection.find({})
 
         return [doc async for doc in cursor]
 
@@ -41,15 +39,15 @@ class MongoDBDatabase(DatabaseInterface):
     def __init__(self, connection_str: str, db_name: str) -> None:
         self.connection_str: str = connection_str
         self.db_name: str = db_name
-        self.client = AsyncIOMotorClient(host=self.connection_str)
-        self.db: AsyncIOMotorDatabase = self.client[self.db_name]
+        self.client = AsyncMongoClient(host=self.connection_str)
+        self.db: AsyncDatabase = self.client[self.db_name]
 
     async def open(self) -> None:
-        self.client = AsyncIOMotorClient(host=self.connection_str)
+        self.client = AsyncMongoClient(host=self.connection_str)
         self.db = self.client[self.db_name]
 
     async def close(self) -> None:
-        self.client.close()
+        await self.client.close()
 
     def table(self, table_name: str) -> TableInterface:
         return MongoTable(collection=self.db[table_name])
@@ -59,7 +57,7 @@ class MongoDBDatabase(DatabaseInterface):
         collections: list[str] = await self.db.list_collection_names()
 
         for coll in collections:
-            cursor: AsyncIOMotorCursor = self.db[coll].find({})
+            cursor: AsyncCursor = self.db[coll].find({})
             data[coll] = [doc async for doc in cursor]
 
         return data
