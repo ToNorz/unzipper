@@ -4,6 +4,11 @@ from defaults import Defaults
 from env import Env
 from psutil import cpu_count
 
+FRAMEWORK_META_DICT = dict(
+    item.split(", ", 1)
+    for item in Env.FRAMEWORK_METADATA.get_all(name="Project-URL") or []
+)
+
 
 class Config:
     # ? Env vars, edit the .env file !!
@@ -31,25 +36,19 @@ class Config:
         "Directly in Telegram": "https://t.me/EDM115bots/698",
     }
     FRAMEWORK_DOCS: str = (
-        dict(
-            item.split(", ", 1)
-            for item in Env.FRAMEWORK_METADATA.get_all(name="Project-URL") or []
-        ).get("Documentation")
+        FRAMEWORK_META_DICT.get("Documentation")
         or ""
     )
     FRAMEWORK_NAME: str = "/".join(
         (
-            dict(
-                item.split(", ", 1)
-                for item in Env.FRAMEWORK_METADATA.get_all(name="Project-URL") or []
-            ).get("Source")
+            FRAMEWORK_META_DICT.get("Source")
             or ""
         ).rsplit("/", 2)[-2:]
     )
     MAX_CONCURRENT_TASKS = 75
     MAX_MESSAGE_LENGTH = 4096
-    MAX_TASK_DURATION_EXTRACT = 120 * 60  # 2 hours (in seconds)
-    MAX_TASK_DURATION_MERGE = 240 * 60  # 4 hours (in seconds)
+    MAX_TASK_DURATION_EXTRACT = 2 * 60 * 60  # 2 hours (in seconds)
+    MAX_TASK_DURATION_MERGE = 4 * 60 * 60  # 4 hours (in seconds)
     # Files under that size will not display a progress bar while uploading
     MIN_SIZE_PROGRESS = 1024 * 1024 * 50  # 50 MB
     PROGRESS_EMPTY = "⬡"
@@ -62,7 +61,7 @@ class Config:
     BOT_THUMB: str = join(Env.ROOT_DIR, "bot_thumb.jpg")
     DOWNLOAD_LOCATION: str = join(Env.ROOT_DIR, "Downloads")
     LOCKFILE = "/tmp/unzipbot.lock"
-    MAX_CPU_CORES_COUNT: int | None = cpu_count(logical=False)
+    MAX_CPU_CORES_COUNT: int = cpu_count(logical=False) or 1
     MAX_CPU_USAGE = 80
     # 512 MB by default for Heroku, unlimited otherwise
     MAX_RAM_AMOUNT_KB = 1024 * 512 if IS_HEROKU else -1

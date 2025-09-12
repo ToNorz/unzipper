@@ -2,8 +2,10 @@ from importlib.metadata import PackageMetadata, metadata, version
 from os import environ
 from pathlib import Path
 
-pkg_name: str = Path(__file__).resolve().parents[1].name
+from unzipbot.cli.run import run_sync_shell_cmds
+
 PACKAGE_ROOT: Path = Path(__file__).resolve().parents[1]
+pkg_name: str = PACKAGE_ROOT.name
 
 
 class Env:
@@ -22,5 +24,9 @@ class Env:
 
     class Versions:
         PYROFORK: str = version("pyrofork")
-        PYTHON = "3.12.10"  # TODO : grab this from terminal once cli is done
-        UNZIPBOT = "7.3.0"
+        PYTHON: str = run_sync_shell_cmds(
+            "python3 --version"
+        ).get("output", "3.12.11").strip().split(" ")[-1]
+        UNZIPBOT: str = run_sync_shell_cmds(
+            f"grep -oP '(?<=^version = \")[^\"]*' {PACKAGE_ROOT.parent / 'pyproject.toml'}"
+        ).get("output", "7.3.0").strip()
