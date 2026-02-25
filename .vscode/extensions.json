@@ -1,16 +1,13 @@
 {
   "recommendations": [
+    "astral-sh.ty",
     "britesnow.vscode-toggle-quotes",
     "charliermarsh.ruff",
     "edwinhuish.better-comments-next",
     "docker.docker",
-    "foxundermoon.shell-format",
     "mikestead.dotenv",
     "ms-python.python",
     "ms-python.vscode-pylance",
     "nhoizey.gremlins",
-    "tamasfe.even-better-toml",
-    "timonwong.shellcheck",
-    "visualstudioexptteam.vscodeintellicode",
   ]
 }

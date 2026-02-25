@@ -1,9 +1,12 @@
 import logging
 import time
 
+import uvloop
 from pyrogram import Client
 
 from config import Config
+
+uvloop.install()
 
 boottime = time.time()
 plugins = dict(root="modules")

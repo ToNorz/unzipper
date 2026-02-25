@@ -35,15 +35,9 @@ class Config:
         "BuyMeACoffee": "https://www.buymeacoffee.com/edm115",
         "Directly in Telegram": "https://t.me/EDM115bots/698",
     }
-    FRAMEWORK_DOCS: str = (
-        FRAMEWORK_META_DICT.get("Documentation")
-        or ""
-    )
+    FRAMEWORK_DOCS: str = FRAMEWORK_META_DICT.get("Documentation") or ""
     FRAMEWORK_NAME: str = "/".join(
-        (
-            FRAMEWORK_META_DICT.get("Source")
-            or ""
-        ).rsplit("/", 2)[-2:]
+        (FRAMEWORK_META_DICT.get("Source") or "").rsplit("/", 2)[-2:]
     )
     MAX_CONCURRENT_TASKS = 75
     MAX_MESSAGE_LENGTH = 4096

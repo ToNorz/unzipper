@@ -34,10 +34,8 @@ async def run_shell_cmds(command) -> dict[str, str]:
     LOGGER.info(msg=f"stdout : {o}")
     LOGGER.info(msg=f"stderr : {e}")
 
-    return {
-        "output": o,
-        "error": e
-    }
+    return {"output": o, "error": e}
+
 
 def run_sync_shell_cmds(command: str) -> dict[str, str]:
     return run(run_shell_cmds(command))
