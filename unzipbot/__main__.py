@@ -5,9 +5,8 @@ import time
 
 from pyrogram import idle
 
-from config import Config
-
 from . import LOGGER, unzipbot_client
+from .config.config import Config
 from .helpers.database import get_lang
 from .helpers.start import (
     check_logs,

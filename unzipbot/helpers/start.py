@@ -8,8 +8,8 @@ import aiocron
 from pyrogram import enums
 from pyrogram.errors import FloodPremiumWait, FloodWait
 
-from config import Config
 from unzipbot import LOGGER, boottime, unzipbot_client
+from unzipbot.config.config import Config
 from unzipbot.i18n.messages import Messages
 from unzipbot.modules.callbacks import download
 

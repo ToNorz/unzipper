@@ -5,8 +5,8 @@ from shlex import quote
 
 from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 
-from config import Config
 from unzipbot import LOGGER
+from unzipbot.config.config import Config
 from unzipbot.helpers.database import get_lang
 from unzipbot.helpers.unzip_help import calculate_memory_limit, tarball_extensions
 from unzipbot.i18n.messages import Messages

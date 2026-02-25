@@ -6,8 +6,8 @@ import base58check
 from motor.motor_asyncio import AsyncIOMotorClient
 from pyrogram.errors import FloodPremiumWait, FloodWait
 
-from config import Config
 from unzipbot import unzipbot_client
+from unzipbot.config.config import Config
 from unzipbot.i18n.messages import Messages
 
 mongodb = AsyncIOMotorClient(host=Config.MONGODB_URL)

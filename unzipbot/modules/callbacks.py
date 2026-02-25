@@ -16,8 +16,8 @@ from pyrogram import Client
 from pyrogram.errors import ReplyMarkupTooLong
 from pyrogram.types import CallbackQuery
 
-from config import Config
 from unzipbot import LOGGER, unzipbot_client
+from unzipbot.config.config import Config
 from unzipbot.helpers.database import (
     add_cancel_task,
     add_ongoing_task,

@@ -5,7 +5,7 @@ import time
 
 from pyrogram import Client
 
-from config import Config
+from .config.config import Config
 
 # https://stackoverflow.com/questions/69890200/how-to-configure-os-specific-dependencies-in-a-pyproject-toml-file-maturin/75711133#75711133
 if sys.platform.startswith("win32") or sys.platform.startswith("linux-cross"):
@@ -13,6 +13,7 @@ if sys.platform.startswith("win32") or sys.platform.startswith("linux-cross"):
     asyncio.set_event_loop(loop)
 else:
     import uvloop
+
     uvloop.install()
     loop = uvloop.new_event_loop()
     asyncio.set_event_loop(loop)

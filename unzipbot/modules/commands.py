@@ -16,8 +16,8 @@ from pyrogram import enums, filters
 from pyrogram.errors import FloodPremiumWait, FloodWait, RPCError
 from pyrogram.types import Message
 
-from config import Config
 from unzipbot import LOGGER, boottime, unzipbot_client
+from unzipbot.config.config import Config
 from unzipbot.helpers.database import (
     add_banned_user,
     add_merge_task,

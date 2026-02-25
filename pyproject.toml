@@ -18,7 +18,7 @@ dependencies = [
   "unzip-http==0.7",
   "uvloop==0.22.1 ; platform_system != 'Windows'",
 ]
-requires-python = ">=3.10"
+requires-python = ">=3.12"
 readme = "README.md"
 license = { file = "LICENSE" }
 

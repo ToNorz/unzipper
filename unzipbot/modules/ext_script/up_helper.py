@@ -15,8 +15,8 @@ from pyrogram.errors import (
 )
 from unzipbot.modules.ext_script.metadata_helper import get_audio_metadata
 
-from config import Config
 from unzipbot import LOGGER, unzipbot_client
+from unzipbot.config.config import Config
 from unzipbot.helpers.database import get_lang, get_upload_mode
 from unzipbot.helpers.unzip_help import (
     extentions_list,

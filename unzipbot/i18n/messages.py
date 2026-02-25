@@ -1,6 +1,6 @@
 import json
 
-from config import Config
+from unzipbot.config.config import Config
 from unzipbot.helpers.database import get_lang
 
 
