@@ -15,10 +15,9 @@
   "explorer.fileNesting.enabled": true,
   "explorer.fileNesting.expand": false,
   "explorer.fileNesting.patterns": {
-    "config.py": ".python-version, .env",
     "Dockerfile": "docker-compose.yml, .dockerignore",
     "heroku.yml": "app.json, Procfile",
-    "pyproject.toml": "uv.lock",
+    "pyproject.toml": ".python-version, .env, uv.lock",
     "README.md": "LICENSE, CHANGELOG.md, CreateMongoDB.md, bot_thumb.jpg, .deepsource.toml, AUTHORS, CONTRIBUTORS.svg, .gitignore, AGENTS.md",
     "start.sh": "setup.sh"
   },

@@ -10,8 +10,8 @@ env/
 venv/
 .ruff_cache
 
-# SonarQube
-.scannerwork/
+# AI utils
+plans/
 
 # Secrets
 *.session
