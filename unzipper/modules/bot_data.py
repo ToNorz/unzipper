@@ -31,8 +31,6 @@ class Messages:
 
     DELETE = "Delete 🚮"
 
-    RATE = "Rate me ⭐"
-
     # start.py
 
     PRIVATE_CHAT = "A private chat can't be used"
@@ -268,16 +266,14 @@ Send **/commands** to learn more
 • **Language :** [Python 3.12.4](https://www.python.org/)
 • **Framework :** [Pyrogram 2.0.106](https://pyrogram.org/)
 • **Source code :** [UnxTar/unzip-bot](https://github.com/UnxTar/unzip-bot)
-• **Developer :** [UnxTar](https://github.com/UnxTar)
 
-**[Rate me ⭐](https://t.me/BotsArchive/2705)**
 Made with ❤️ by **@CoupOrg**
     """
 
     VIP_INFO = """
 --**NOT AVAILABLE YET !**--
 
-Wanna help the developer of this __amazing__ bot ?
+Wanna support this __amazing__ bot ?
 Here's how : Become a VIP user and benefit from extra perks !
 
 **VIP perks :**
@@ -1002,12 +998,3 @@ class Buttons:
         ]
     )
 
-    RATE_ME = InlineKeyboardMarkup(
-        [
-            [
-                InlineKeyboardButton(
-                    Messages.RATE, url="https://t.me/BotsArchive/2705"
-                ),
-            ],
-        ]
-    )

@@ -784,11 +784,8 @@ async def unzipper_cb(unzip_bot: Client, query: CallbackQuery):
                     await unzip_bot.send_message(
                         chat_id=user_id,
                         text=Messages.UPLOADED,
-                        reply_markup=Buttons.RATE_ME,
                     )
-                    await query.message.edit(
-                        text=Messages.UPLOADED, reply_markup=Buttons.RATE_ME
-                    )
+                    await query.message.edit(text=Messages.UPLOADED)
                 except:
                     pass
                 return
@@ -970,9 +967,7 @@ async def unzipper_cb(unzip_bot: Client, query: CallbackQuery):
             if os.path.isdir(f"{Config.DOWNLOAD_LOCATION}/{spl_data[1]}"):
                 shutil.rmtree(f"{Config.DOWNLOAD_LOCATION}/{spl_data[1]}")
             await del_ongoing_task(user_id)
-            await query.message.edit(
-                text=Messages.NO_FILE_LEFT, reply_markup=Buttons.RATE_ME
-            )
+            await query.message.edit(text=Messages.NO_FILE_LEFT)
             return
         LOGGER.info("ext_f paths : " + str(paths))
         try:
@@ -1051,9 +1046,7 @@ async def unzipper_cb(unzip_bot: Client, query: CallbackQuery):
             except:
                 pass
             await del_ongoing_task(user_id)
-            await query.message.edit(
-                text=Messages.NO_FILE_LEFT, reply_markup=Buttons.RATE_ME
-            )
+            await query.message.edit(text=Messages.NO_FILE_LEFT)
             return
         if urled:
             try:
@@ -1119,9 +1112,7 @@ async def unzipper_cb(unzip_bot: Client, query: CallbackQuery):
             except:
                 pass
             await del_ongoing_task(user_id)
-            await query.message.edit(
-                text=Messages.NO_FILE_LEFT, reply_markup=Buttons.RATE_ME
-            )
+            await query.message.edit(text=Messages.NO_FILE_LEFT)
             return
         await query.message.edit(Messages.SEND_ALL_FILES)
         async_paths = async_generator(paths)
@@ -1188,11 +1179,9 @@ async def unzipper_cb(unzip_bot: Client, query: CallbackQuery):
 
         try:
             await unzip_bot.send_message(
-                chat_id=user_id, text=Messages.UPLOADED, reply_markup=Buttons.RATE_ME
+                chat_id=user_id, text=Messages.UPLOADED
             )
-            await query.message.edit(
-                text=Messages.UPLOADED, reply_markup=Buttons.RATE_ME
-            )
+            await query.message.edit(text=Messages.UPLOADED)
         except:
             pass
         await log_msg.reply(Messages.HOW_MANY_UPLOADED.format(sent_files))
