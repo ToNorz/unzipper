@@ -12,5 +12,4 @@ RUN pip3 install -U pip setuptools wheel && \
 WORKDIR /app
 RUN git clone https://github.com/ToNorz/unzipper.git /app && \
 
-COPY .env /app/.env
 CMD ["/bin/bash", "start.sh"]
