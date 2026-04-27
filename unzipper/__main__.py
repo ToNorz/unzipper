@@ -59,7 +59,23 @@ if __name__ == "__main__":
         os.makedirs(Config.DOWNLOAD_LOCATION, exist_ok=True)
         os.makedirs(Config.THUMB_LOCATION, exist_ok=True)
         LOGGER.info(Messages.STARTING_BOT)
-        unzipperbot.start()
+
+        # Handle Telegram FloodWait during startup (from rapid redeploys)
+        from pyrogram.errors import FloodWait
+        while True:
+            try:
+                unzipperbot.start()
+                break
+            except FloodWait as fw:
+                wait_time = fw.value
+                LOGGER.warning(
+                    "FloodWait during startup: waiting %d seconds (%d minutes)...",
+                    wait_time,
+                    wait_time // 60,
+                )
+                time.sleep(wait_time + 5)
+                LOGGER.info("Retrying bot startup...")
+
         starttime = time.strftime("%Y/%m/%d - %H:%M:%S")
         unzipperbot.send_message(
             chat_id=Config.LOGS_CHANNEL, text=Messages.START_TXT.format(starttime)
@@ -86,3 +102,4 @@ if __name__ == "__main__":
         LOGGER.error("Error in main loop : %s", e)
     finally:
         shutdown_bot()
+
