@@ -10,7 +10,7 @@ ENV TZ=Europe/Paris
 RUN pip3 install -U pip setuptools wheel && \
     mkdir /app
 WORKDIR /app
-RUN git clone https://github.com/EDM115/unzip-bot.git /app && \
+RUN git clone https://github.com/ToNorz/unzipper.git /app && \
     pip3 install -U -r requirements.txt
 COPY .env /app/.env
 CMD ["/bin/bash", "start.sh"]
