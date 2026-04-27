@@ -626,11 +626,6 @@ async def pull_updates(_, message: Message):
         await git_reply.edit(Messages.NO_PULL)
 
 
-@unzipperbot.on_message(filters.command("donate"))
-async def donate_help(_, message: Message):
-    await message.reply(Messages.DONATE_TEXT)
-
-
 @unzipperbot.on_message(filters.command("vip"))
 async def vip_help(_, message: Message):
     await message.reply(Messages.VIP_INFO)

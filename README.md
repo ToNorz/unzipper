@@ -1,6 +1,6 @@
 <div align="center">
 
-# Unarchiver Bot
+# UnxBot
 
 ## A Telegram bot to extract various types of archives
 
@@ -14,7 +14,12 @@
 
 ## Working bot 🥰
 
-[@unzip_UnxTarbot](https://t.me/unzip_UnxTarbot)
+[@UnxBot](https://t.me/UnxBot)
+
+## Updates channel & support group
+
+- Channel : [@CoupOrg](https://t.me/CoupOrg)
+- Group : [@CoupChats](https://t.me/CoupChats)
 
 ## Features 👀
 
@@ -162,7 +167,7 @@ docker push UnxTar/unzip-bot:latest
 
 ## Found a bug 🐞
 
-If you found a bug in this bot please open an [issue](https://github.com/UnxTar/unzip-bot/issues) or report it on Telegram : [@UnxTar](https://t.me/UnxTar)  
+If you found a bug in this bot please open an [issue](https://github.com/UnxTar/unzip-bot/issues) or report it on Telegram : [@CoupChats](https://t.me/CoupChats)  
 Same if you have any feature request 😉
 
 ## License & Copyright 👮‍♀️
@@ -170,7 +175,7 @@ Same if you have any feature request 😉
 ```
 Copyright (c) 2022 UnxTar
 
-This Unarchiver Bot repository is licensed under MIT License (https://github.com/UnxTar/unzip-bot/blob/master/LICENSE)
+This UnxBot repository is licensed under MIT License (https://github.com/UnxTar/unzip-bot/blob/master/LICENSE)
 Enjoy copying and modifying, but always mention me
 ```
 

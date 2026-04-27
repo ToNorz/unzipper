@@ -11,8 +11,6 @@ class Messages:
 
     STATS_BTN = "Stats 📊"
 
-    DONATE = "Donate 💸"
-
     REFRESH = "Refresh ♻️"
 
     BACK = "Back 🏡"
@@ -70,7 +68,7 @@ Don't go AFK next time 😉
     BANNED = """
 **Sorry you're banned 💀**
 
-Report this at @UnxTar_chat if you think this is a mistake, I may unban you
+Report this at @CoupChats if you think this is a mistake, I may unban you
     """
 
     NEW_USER_BAD = """
@@ -100,7 +98,7 @@ This may take a while, go grab a coffee ☕️
 {}
 {}
 
-**Powered by @UnxTarbots**
+**Powered by @CoupOrg**
     """
 
     PROCESSING = "**Processing…**"
@@ -121,7 +119,7 @@ This may take a while, go grab a coffee ☕️
 
     LOG_CHECKED = "Log channel checked"
 
-    BOT_RUNNING = "Bot is running now ! Join @UnxTarbots"
+    BOT_RUNNING = "Bot is running now ! Join @CoupOrg"
 
     WRONG_LOG = """
 Error : the provided **LOGS_CHANNEL** (`{}`) is incorrect
@@ -157,7 +155,7 @@ Select the extraction mode for that merged file 👀
     EXT_CAPTION = """
 `{}`
 
-Successfully extracted by @unzip_UnxTarbot 🥰
+Successfully extracted by @UnxBot 🥰
     """
 
     REPORT_TEXT = """
@@ -190,7 +188,7 @@ have been saved from the URL
 
 **⚠ IN ALL CASES ⚠**, please send **/clean**, else you can't send any other task 🙂🔫
 
-Please report this at @UnxTar_chat if you think this is a serious error
+Please report this at @CoupChats if you think this is a serious error
     """
 
     HOW_MANY_UPLOADED = "`{}` file(s) have been extracted from that archive"
@@ -230,13 +228,12 @@ Use **/merge** to start one
     ACTUAL_THUMB = "Your actual thumbnail"
 
     START_TEXT = """
-Hi **{}** 👋, I'm **Unarchiver bot** 🥰
+Hi **{}** 👋, I'm **UnxBot** 🥰
 
 I can extract any archive, with password or not, splitted, …
 Send **/commands** to learn more
 
-**Made with ❤️ by @UnxTarbots**
-**/donate** if you can 🥺
+**Made with ❤️ by @CoupOrg**
     """
 
     HELP_TXT = """
@@ -262,11 +259,11 @@ Send **/commands** to learn more
 
 **• I wanna have help 🥺**
 
-    PM me at **@UnxTar** or join the chat **@UnxTar_chat**
+    Join the chat **@CoupChats**
     """
 
     ABOUT_TXT = """
-**About Unarchiver bot [v6.3.5]**
+**About UnxBot [v6.3.5]**
 
 • **Language :** [Python 3.12.4](https://www.python.org/)
 • **Framework :** [Pyrogram 2.0.106](https://pyrogram.org/)
@@ -274,27 +271,7 @@ Send **/commands** to learn more
 • **Developer :** [UnxTar](https://github.com/UnxTar)
 
 **[Rate me ⭐](https://t.me/BotsArchive/2705)**
-Made with ❤️ by **@UnxTarbots**
-    """
-
-    DONATE_TEXT = """
-I'm going to be honest : **this bot costs me money**…
-Nothing's free on this world, however I try to keep this bot for free for as many people as possible
-I don't like to put restrictions, nor getting your PM's flooded with ads…
-
-So if you can, donate :)
-It helps out a ton, covers the costs (hosting, updating, … 👨‍💻)
-
---How ?--
-• **[Paypal](https://www.paypal.me/8UnxTar)**
-• **[GitHub Sponsors](https://github.com/sponsors/UnxTar)**
-• **[Directly in Telegram](https://t.me/UnxTarbots/698)**
-• **[BuyMeACoffee](https://www.buymeacoffee.com/UnxTar)**
-
-Thanks for your contribution 😊
-
---Side note :--
-Donation doesn't count as a VIP subscription. Check **/vip** for more info
+Made with ❤️ by **@CoupOrg**
     """
 
     VIP_INFO = """
@@ -317,26 +294,12 @@ Here's how : Become a VIP user and benefit from extra perks !
 - `10$/year`
 
 **How to become a VIP ?**
-1) Send **/pay** to the bot
-2) Choose your subscription
-3) Send a screenshot of your payment to **@UnxTar**
-4) Enjoy your VIP perks !
-
-**What happens when my subscription ends ?**
-If you choosed GitHub Sponsors, Telegram Donate or BuyMeACoffee, you will be automatically renewed until you cancel it
-If you choosed PayPal, you will have to redo the 4 above steps
-You will be notified few days before you subscription ends so you can check if you want to renew it or not
-
-**I wanna cancel my subscription**
-Just send **/stoppay** and follow the instructions according to the platform you selected
-Your payment will be cancelled and you will keep your VIP perks until the end of your subscription
-(i.e. if you paid for 1 month, from 05/01/2024 to 05/02/2024 and you cancel your subscription on 15/01/2024, your perks will stay until 05/02/2024)
+Contact us at **@CoupChats** for more details
 
 **What is the referral system ?**
 Referrals have benefits for both sides :)
 - For the referrer : you get 1 month of VIP for free for each 3 new VIPs you bring
 - For the referred : you get 1 month of VIP for free if you take the monthly subscription, and 3 months for free if you take the yearly subscription
-How to input the referral code ? Just send **/pay** to the bot and follow the instructions
     """
 
     VIP_REQUIRED_MESSAGE = """
@@ -457,7 +420,7 @@ Do you really want to delete your thumbnail ?
 
 `{}`
 
-Please report this at @UnxTar_chat if you think this is a serious error
+Please report this at @CoupChats if you think this is a serious error
     """
 
     CANCELLED_TXT = "**{} ✅**"
@@ -511,7 +474,7 @@ That's not an archive 💀
 
     DEF_NOT_AN_ARCHIVE = """
 This file is NOT an archive 😐
-If you believe it's an error, send the file to **@UnxTar**
+If you believe it's an error, report it at **@CoupChats**
     """
 
     PROCESSING2 = "`Processing… ⏳`"
@@ -539,7 +502,7 @@ Use the **/merge** command
     QUERY_PARSE_ERR = """
 Fatal query parsing error 💀
 
-Please contact @UnxTar_chat with details and screenshots
+Please contact @CoupChats with details and screenshots
     """
 
     GIVE_NEW_NAME = """
@@ -557,7 +520,7 @@ Please send the new file name (**--INCLUDE THE FILE EXTENTION !--**)
     UPLOADED = """
 **Successfully uploaded ✅**
 
-**Join @UnxTarbots ❤️**
+**Join @CoupOrg ❤️**
     """
 
     NO_FILE_LEFT = "There's no file left to upload"
@@ -671,12 +634,12 @@ It failed 😣 Retry
 If it fails again, it means that {} haven't started the bot yet (or deleted the chat), or he's private/banned/whatever
     """
 
-    REPORT_REPLY = "Reply to a message to report it to @UnxTar"
+    REPORT_REPLY = "Reply to a message to report it to @CoupChats"
 
     REPORT_DONE = """
 Report sucessfully sent ! An answer will arrive soon
 
-Note : if you need to reply to replies, always use that /report command (or join **@UnxTar_chat**)
+Note : if you need to reply to replies, always use that /report command (or join **@CoupChats**)
     """
 
     BAN_ID = "Give an user id to ban 😈"
@@ -786,7 +749,6 @@ Here is the list of the commands you can use (only in private btw) :
 **/start** : To know if I'm online
 **/help** : Gives a simple help
 **/about** : Know more about me
-**/donate** : Know how you can contribute to this bot
 **/clean** : Remove your files from my server. Also useful if a task failed
 **/mode** : Change your upload mode (either `doc` or `media`)
 **/stats** : Know all the current stats about me
@@ -816,7 +778,7 @@ Here's all the commands that only the owner (you) can use :
 **/maintenance** : Put the bot in or out of maintenance mode. No tasks can be processed while on
 **/cleanall** : Same as `/clean`, but for the whole server
 **/cleantasks** : Same as `/cleanall`, plus removes them from the database
-**/logs** : Send you the logs (all of them). Useful for bug tracking. Send them to **@UnxTar** if you don't understand them/need help
+**/logs** : Send you the logs (all of them). Useful for bug tracking. Send them to **@CoupChats** if you don't understand them/need help
 **/restart** : Does a basic restart, less intrusive as the `/redbutton` one
 **/dbexport** : ~~Exports the whole database as CSV~~ __Does nothing yet__
 **/eval {code}** : Evaluate a piece of code. Useful for debugging
@@ -888,7 +850,6 @@ class Buttons:
             ],
             [
                 InlineKeyboardButton(Messages.STATS_BTN, callback_data="statscallback"),
-                InlineKeyboardButton(Messages.DONATE, callback_data="donatecallback"),
             ],
         ]
     )
@@ -1047,7 +1008,6 @@ class Buttons:
                 InlineKeyboardButton(
                     Messages.RATE, url="https://t.me/BotsArchive/2705"
                 ),
-                InlineKeyboardButton(Messages.DONATE, callback_data="donatecallback"),
             ],
         ]
     )

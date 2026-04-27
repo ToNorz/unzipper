@@ -1,5 +1,5 @@
 {
-    "name": "Unzipper Bot",
+    "name": "UnxBot",
     "description": "A Telegram bot to extract various types of archives",
     "logo": "https://telegra.ph/file/d4ba24682e030fc58613f.jpg",
     "keywords": [
@@ -7,11 +7,11 @@
         "zip",
         "rar",
         "Telegram Bot",
-        "unzipper bot"
+        "UnxBot"
     ],
     "website": "https://UnxTar.dev/unzip",
     "repository": "https://github.com/UnxTar/unzip-bot",
-    "success_url": "https://t.me/UnxTarbots",
+    "success_url": "https://t.me/CoupOrg",
     "env": {
         "APP_ID": {
             "description": "Your APP_ID from my.telegram.org",

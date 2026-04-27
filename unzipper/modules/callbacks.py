@@ -157,13 +157,6 @@ async def unzipper_cb(unzip_bot: Client, query: CallbackQuery):
             disable_web_page_preview=True,
         )
 
-    elif query.data == "donatecallback":
-        await query.edit_message_text(
-            text=Messages.DONATE_TEXT,
-            reply_markup=Buttons.ME_GOIN_HOME,
-            disable_web_page_preview=True,
-        )
-
     elif query.data.startswith("statscallback"):
         if query.data.endswith("refresh"):
             await query.edit_message_text(text=Messages.REFRESH_STATS)
