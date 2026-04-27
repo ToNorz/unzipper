@@ -20,6 +20,7 @@ FROM python:3.12-slim
 RUN echo "deb http://deb.debian.org/debian bookworm non-free" >> /etc/apt/sources.list && \
     apt-get update && apt-get install -y --no-install-recommends \
     ffmpeg \
+    git \
     p7zip-full \
     p7zip-rar \
     unrar \
