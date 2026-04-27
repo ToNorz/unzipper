@@ -1,4 +1,4 @@
-# Copyright (c) 2022 - 2024 EDM115
+# Copyright (c) 2022 - 2024 UnxTar
 import base58check
 
 from asyncio import sleep

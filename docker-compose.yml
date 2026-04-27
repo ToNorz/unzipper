@@ -1,0 +1,18 @@
+services:
+  unzipper-bot:
+    build: .
+    container_name: unzipper-bot
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      - TZ=Asia/Kolkata
+    volumes:
+      # Persist session files so the bot doesn't need to re-auth on restart
+      - ./sessions:/app/sessions
+    networks:
+      - bot-network
+
+networks:
+  bot-network:
+    driver: bridge

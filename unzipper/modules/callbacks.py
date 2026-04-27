@@ -1,4 +1,4 @@
-# Copyright (c) 2022 - 2024 EDM115
+# Copyright (c) 2022 - 2024 UnxTar
 import asyncio
 import concurrent.futures
 import os

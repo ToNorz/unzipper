@@ -4,7 +4,7 @@
     "Mend: Renovate"
   ],
   "assignees": [
-    "EDM115"
+    "UnxTar"
   ],
   "cloneSubmodules": true,
   "commitBodyTable": true,
@@ -23,7 +23,7 @@
   "prConcurrentLimit": 0,
   "prHourlyLimit": 0,
   "reviewers": [
-    "EDM115"
+    "UnxTar"
   ],
   "semanticCommitScope": "dependencies",
   "semanticCommitType": "update",

@@ -6,15 +6,15 @@
 
 <img src="https://telegra.ph/file/d4ba24682e030fc58613f.jpg" alt="Unzip logo" width="200" height="200">
 
-[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black) [![DeepSource](https://app.deepsource.com/gh/EDM115/unzip-bot.svg/?label=active+issues&show_trend=true&token=17SfwVx77dbrFlixtGdQsQNh)](https://app.deepsource.com/gh/EDM115/unzip-bot/?ref=repository-badge)
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black) [![DeepSource](https://app.deepsource.com/gh/UnxTar/unzip-bot.svg/?label=active+issues&show_trend=true&token=17SfwVx77dbrFlixtGdQsQNh)](https://app.deepsource.com/gh/UnxTar/unzip-bot/?ref=repository-badge)
 
-[![Unzip-Bot Analytics](https://repobeats.axiom.co/api/embed/5c857b55b42dd8235388093858b74341f6c679ac.svg)](https://github.com/EDM115/unzip-bot/pulse)
+[![Unzip-Bot Analytics](https://repobeats.axiom.co/api/embed/5c857b55b42dd8235388093858b74341f6c679ac.svg)](https://github.com/UnxTar/unzip-bot/pulse)
 
 </div>
 
 ## Working bot 🥰
 
-[@unzip_edm115bot](https://t.me/unzip_edm115bot)
+[@unzip_UnxTarbot](https://t.me/unzip_UnxTarbot)
 
 ## Features 👀
 
@@ -72,7 +72,7 @@ Deploying is easy 🥰 You can deploy this bot in Heroku or in a VPS ♥️
 
 #### The lazy way
 
-[![Deploy me 🥺](https://www.herokucdn.com/deploy/button.svg)](https://www.heroku.com/deploy?template=https://github.com/EDM115/unzip-bot)  
+[![Deploy me 🥺](https://www.herokucdn.com/deploy/button.svg)](https://www.heroku.com/deploy?template=https://github.com/UnxTar/unzip-bot)  
 (if you're in a fork, make sure to replace the template URL with your repo's one)
 
 ---
@@ -82,10 +82,10 @@ Deploying is easy 🥰 You can deploy this bot in Heroku or in a VPS ♥️
 + Install [Docker](https://www.docker.com/) then restart your computer
 
 ```bash
-git clone https://github.com/EDM115/unzip-bot.git
+git clone https://github.com/UnxTar/unzip-bot.git
 cd unzip-bot
 nano .env
-docker build -t edm115/unzip-bot .
+docker build -t UnxTar/unzip-bot .
 ```
 
 + Open Docker Desktop, go on the Images tab, click on the Run button
@@ -96,7 +96,7 @@ docker build -t edm115/unzip-bot .
 #### The legacy way
 
 ```bash
-git clone https://github.com/EDM115/unzip-bot.git
+git clone https://github.com/UnxTar/unzip-bot.git
 cd unzip-bot
 pip3 install -r requirements.txt
 ```
@@ -112,7 +112,7 @@ chmod +x start.sh && ./start.sh
 
 ---
 
-**DONE 🥳 enjoy the bot !** Be sure to follow me on [Github](https://github.com/EDM115) and Star 🌟 this repo to show some support 🥺
+**DONE 🥳 enjoy the bot !** Be sure to follow me on [Github](https://github.com/UnxTar) and Star 🌟 this repo to show some support 🥺
 
 ## How to Build after changes ?
 
@@ -130,8 +130,8 @@ chmod +x start.sh && ./start.sh
 + Go in the repo's folder
 
 ```bash
-docker build --no-cache -t edm115/unzip-bot .
-docker run -d -v downloaded-volume:/app/Downloaded -v thumbnails-volume:/app/Thumbnails --env-file ./.env --network host --name unzip-bot-container edm115/unzip-bot
+docker build --no-cache -t UnxTar/unzip-bot .
+docker run -d -v downloaded-volume:/app/Downloaded -v thumbnails-volume:/app/Thumbnails --env-file ./.env --network host --name unzip-bot-container UnxTar/unzip-bot
 docker start unzip-bot-container
 # if you want to check something
 docker exec -it unzip-bot-container sh
@@ -143,10 +143,10 @@ docker stop unzip-bot-container
 + If you wanna publish :
 
 ```bash
-docker tag edm115/unzip-bot edm115/unzip-bot:latest
+docker tag UnxTar/unzip-bot UnxTar/unzip-bot:latest
 ```
 
-*(replace `edm115` with your docker hub username, `unzip-bot` with the repo's name and `latest` whith whatever you want)*
+*(replace `UnxTar` with your docker hub username, `unzip-bot` with the repo's name and `latest` whith whatever you want)*
 
 ```bash
 docker login
@@ -155,22 +155,22 @@ docker login
 *login and don't mind the errors*
 
 ```bash
-docker push edm115/unzip-bot:latest
+docker push UnxTar/unzip-bot:latest
 ```
 
 *(same, replace accordingly)*
 
 ## Found a bug 🐞
 
-If you found a bug in this bot please open an [issue](https://github.com/EDM115/unzip-bot/issues) or report it on Telegram : [@EDM115](https://t.me/EDM115)  
+If you found a bug in this bot please open an [issue](https://github.com/UnxTar/unzip-bot/issues) or report it on Telegram : [@UnxTar](https://t.me/UnxTar)  
 Same if you have any feature request 😉
 
 ## License & Copyright 👮‍♀️
 
 ```
-Copyright (c) 2022 EDM115
+Copyright (c) 2022 UnxTar
 
-This Unarchiver Bot repository is licensed under MIT License (https://github.com/EDM115/unzip-bot/blob/master/LICENSE)
+This Unarchiver Bot repository is licensed under MIT License (https://github.com/UnxTar/unzip-bot/blob/master/LICENSE)
 Enjoy copying and modifying, but always mention me
 ```
 

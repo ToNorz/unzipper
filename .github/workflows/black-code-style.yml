@@ -33,7 +33,7 @@ jobs:
             Please review the changes before merging.
           labels: style
           branch: black-format-code
-          assignees: EDM115
-          reviewers: EDM115
+          assignees: UnxTar
+          reviewers: UnxTar
           draft: true
           sign-commits: true

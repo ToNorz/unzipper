@@ -1,6 +1,6 @@
 <div align="center">
 
-  <h1><a href="https://github.com/EDM115/unzip-bot" target="_blank" rel="noreferrer"><img src="https://telegra.ph/file/d4ba24682e030fc58613f.jpg" alt="unzip-bot" width="40" height="40"/></a> Unarchiver Bot • Changelog</h1>
+  <h1><a href="https://github.com/UnxTar/unzip-bot" target="_blank" rel="noreferrer"><img src="https://telegra.ph/file/d4ba24682e030fc58613f.jpg" alt="unzip-bot" width="40" height="40"/></a> Unarchiver Bot • Changelog</h1>
 
 ## You will find here all the changes made with each version, in antichronological order
 
@@ -79,7 +79,7 @@ or catch PhotoSaveFileInvalid if the picture is too big for Telegram
 
 ### v6.3.1
 
-- Finally fixed [#133](https://github.com/EDM115/unzip-bot/issues/133)
+- Finally fixed [#133](https://github.com/UnxTar/unzip-bot/issues/133)
 - Attempt to create a premium user to upload +2Gb files
 - Added `/maintenance`
 
@@ -93,7 +93,7 @@ or catch PhotoSaveFileInvalid if the picture is too big for Telegram
 - Support for `.partx.rar` splitted archives
 - Download files in 10 Mb chunks instead of 5 Mb
 - Added maintenance on DB
-- Aded VIP methods in DB + implementation of no-restrictions for VIP ([#205](https://github.com/EDM115/unzip-bot/issues/205))
+- Aded VIP methods in DB + implementation of no-restrictions for VIP ([#205](https://github.com/UnxTar/unzip-bot/issues/205))
 
 ### v6.2.4
 
@@ -115,7 +115,7 @@ or catch PhotoSaveFileInvalid if the picture is too big for Telegram
 ### v6.2.2
 
 - Bugfix : No longer use of `subprocess.communicate()`, as it's thread blocking
-- All strings are in `bot_data.py`, hope this should ease [#179](https://github.com/EDM115/unzip-bot/issues/179)
+- All strings are in `bot_data.py`, hope this should ease [#179](https://github.com/UnxTar/unzip-bot/issues/179)
 - Even less thread block : use of `async for` and `yield`
 - Any file unreachable/with a size of 0B is skipped, thus avoiding the bot being stuck on an impossible task
 
@@ -134,7 +134,7 @@ or catch PhotoSaveFileInvalid if the picture is too big for Telegram
 - URL's also shows a progressbar + ETA when possible
 - Downloads are 28 times faster
 - Some databases are cleared upon restart
-- Attempt to implement [#137](https://github.com/EDM115/unzip-bot/issues/137)
+- Attempt to implement [#137](https://github.com/UnxTar/unzip-bot/issues/137)
 - New boot sequence
 
 ### v6.0.0 
@@ -143,13 +143,13 @@ or catch PhotoSaveFileInvalid if the picture is too big for Telegram
 - tgz and zst archives are now supported
 - Thumbnail change tasks are now removed from DB after completion
 - Dockerfile have been updated : Add of ffmpeg and venv
-- Uploading videos as media is fixed ! [#133](https://github.com/EDM115/unzip-bot/issues/133)
+- Uploading videos as media is fixed ! [#133](https://github.com/UnxTar/unzip-bot/issues/133)
 - Added Docker instructions on the README
 - Added GitHub Actions for Docker publishing and deployment
 - Updated the FUNDING.yml
 - New command : /donate, plus donate button appears on /start and after a task is processed
 - Tell users that they can rate the bot after a task is processed
-- [#33](https://github.com/EDM115/unzip-bot/issues/33) is gone (no longer useless alerts)
+- [#33](https://github.com/UnxTar/unzip-bot/issues/33) is gone (no longer useless alerts)
 - ETA is now correct
 - Tried to add a way to cancel tasks, but it's not working
 - Files above 2 GB are now splitted
@@ -175,7 +175,7 @@ or catch PhotoSaveFileInvalid if the picture is too big for Telegram
 - Heroku deployment file now complies to their drop of the free their
 - Added THUMB_DEL buttons
 - Added ZIPX support
-- Added a Refresh button on /stats ([#143](https://github.com/EDM115/unzip-bot/issues/143))
+- Added a Refresh button on /stats ([#143](https://github.com/UnxTar/unzip-bot/issues/143))
 
 ### v5.2.2
 
@@ -260,7 +260,7 @@ or catch PhotoSaveFileInvalid if the picture is too big for Telegram
 - Fixed ENTITY_BOUNDS_INVALID error
 - Removed numpy as we don't use it
 - Added requests
-- Added development followup ([#38](https://github.com/EDM115/unzip-bot/issues/38))
+- Added development followup ([#38](https://github.com/UnxTar/unzip-bot/issues/38))
 - Uptime on /stats works correctly
 - Simpler buttons
 - Thumbnails on upload are officially supported 🥳
@@ -310,7 +310,7 @@ or catch PhotoSaveFileInvalid if the picture is too big for Telegram
 ### v4.3.4
 
 - Fixed crashes
-- Made `/stats` working for non owner, as requested in [#34](https://github.com/EDM115/unzip-bot/issues/34)
+- Made `/stats` working for non owner, as requested in [#34](https://github.com/UnxTar/unzip-bot/issues/34)
 
 ### v4.3.3
 
@@ -342,7 +342,7 @@ or catch PhotoSaveFileInvalid if the picture is too big for Telegram
 
 ### v4.2.0
 
-- Added workaround for [#26](https://github.com/EDM115/unzip-bot/issues/26)
+- Added workaround for [#26](https://github.com/UnxTar/unzip-bot/issues/26)
 - The bot now edit its messages each 7s (instead of 10s)
 - Attempt to make a really better ETA
 - Working around allowing user to cancel file/URL download (will look for the extracting process, bot can't reply while extracting)
@@ -386,8 +386,8 @@ or catch PhotoSaveFileInvalid if the picture is too big for Telegram
 - Logs message now replies to the concerned archive. Better if multiple archives are processed at the same time
 - Errors shows up in logs
 - Created an empty keyboard where only Upload all & Cancel shows up
-- Fixed major bug : REPLY_MARKUP_TOO_LONG ([#2](https://github.com/EDM115/unzip-bot/issues/2))
-- Try to close session (to fix [#4](https://github.com/EDM115/unzip-bot/issues/4))
+- Fixed major bug : REPLY_MARKUP_TOO_LONG ([#2](https://github.com/UnxTar/unzip-bot/issues/2))
+- Try to close session (to fix [#4](https://github.com/UnxTar/unzip-bot/issues/4))
 
 ### v4.0.2
 
@@ -479,4 +479,4 @@ or catch PhotoSaveFileInvalid if the picture is too big for Telegram
 
 ### v1.0.0
 
-- Consider this as the [original work of Nexa](https://github.com/EDM115/unzip-bot#license--copyright-%EF%B8%8F)
+- Consider this as the [original work of Nexa](https://github.com/UnxTar/unzip-bot#license--copyright-%EF%B8%8F)

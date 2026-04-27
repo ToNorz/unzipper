@@ -3,7 +3,7 @@ name: Bug report
 about: Report any bug you found
 title: "[BUG] "
 labels: bug
-assignees: EDM115
+assignees: UnxTar
 
 ---
 

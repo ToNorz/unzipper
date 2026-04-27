@@ -1,7 +1,7 @@
 updates:
   - package-ecosystem: "pip"
     assignees:
-      - "EDM115"
+      - "UnxTar"
     commit-message:
       include: scope
       prefix: "[dependabot/pip] "
@@ -11,7 +11,7 @@ updates:
     pull-request-branch-name:
       separator: "/"
     reviewers:
-      - "EDM115"
+      - "UnxTar"
     schedule:
       day: "sunday"
       interval: "weekly"

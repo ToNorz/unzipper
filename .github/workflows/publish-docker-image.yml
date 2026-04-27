@@ -38,7 +38,7 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           images: |
-            edm115/unzip-bot
+            UnxTar/unzip-bot
             ghcr.io/${{ github.repository }}
       
       - name: Build and push Docker images
@@ -46,5 +46,5 @@ jobs:
         with:
           context: .
           push: true
-          tags: ${{ steps.meta.outputs.tags }},edm115/unzip-bot:latest,ghcr.io/${{ env.REPO_L }}:latest
+          tags: ${{ steps.meta.outputs.tags }},UnxTar/unzip-bot:latest,ghcr.io/${{ env.REPO_L }}:latest
           labels: ${{ steps.meta.outputs.labels }}
