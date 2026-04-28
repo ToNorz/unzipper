@@ -377,7 +377,7 @@ async def unzipper_cb(unzip_bot: Client, query: CallbackQuery):
         if any(err in extractor for err in ERROR_MSGS):
             try:
                 await query.message.edit(Messages.EXT_FAILED_TXT)
-                shutil.rmtree(ext_files_dir)
+                shutil.rmtree(ext_files_dir, ignore_errors=True)
                 shutil.rmtree(download_path)
                 await del_ongoing_task(user_id)
             except:
@@ -388,7 +388,7 @@ async def unzipper_cb(unzip_bot: Client, query: CallbackQuery):
                 await unzip_bot.send_message(
                     chat_id=query.message.chat.id, text=Messages.EXT_FAILED_TXT
                 )
-                shutil.rmtree(ext_files_dir)
+                shutil.rmtree(ext_files_dir, ignore_errors=True)
                 await del_ongoing_task(user_id)
             return
         # Check if user was dumb 😐
@@ -399,8 +399,8 @@ async def unzipper_cb(unzip_bot: Client, query: CallbackQuery):
                 text=Messages.PASSWORD_PROTECTED,
             )
             await answer_query(query, Messages.EXT_FAILED_TXT, unzip_client=unzip_bot)
-            shutil.rmtree(ext_files_dir)
-            shutil.rmtree(download_path)
+            shutil.rmtree(ext_files_dir, ignore_errors=True)
+            shutil.rmtree(download_path, ignore_errors=True)
             await del_ongoing_task(user_id)
             return
 
@@ -465,7 +465,7 @@ async def unzipper_cb(unzip_bot: Client, query: CallbackQuery):
                     await answer_query(
                         query, Messages.EXT_FAILED_TXT, unzip_client=unzip_bot
                     )
-                    shutil.rmtree(ext_files_dir)
+                    shutil.rmtree(ext_files_dir, ignore_errors=True)
                     LOGGER.error(Messages.FATAL_ERROR)
                     await del_ongoing_task(user_id)
                     return
@@ -835,7 +835,7 @@ async def unzipper_cb(unzip_bot: Client, query: CallbackQuery):
             if any(err in extractor for err in ERROR_MSGS):
                 try:
                     await query.message.edit(Messages.EXT_FAILED_TXT)
-                    shutil.rmtree(ext_files_dir)
+                    shutil.rmtree(ext_files_dir, ignore_errors=True)
                     await del_ongoing_task(user_id)
                     await log_msg.reply(Messages.EXT_FAILED_TXT)
                     return
@@ -847,7 +847,7 @@ async def unzipper_cb(unzip_bot: Client, query: CallbackQuery):
                     await unzip_bot.send_message(
                         chat_id=query.message.chat.id, text=Messages.EXT_FAILED_TXT
                     )
-                    shutil.rmtree(ext_files_dir)
+                    shutil.rmtree(ext_files_dir, ignore_errors=True)
                     await del_ongoing_task(user_id)
                     await archive_msg.reply(Messages.EXT_FAILED_TXT)
                     return
@@ -862,7 +862,7 @@ async def unzipper_cb(unzip_bot: Client, query: CallbackQuery):
                 await answer_query(
                     query, Messages.EXT_FAILED_TXT, unzip_client=unzip_bot
                 )
-                shutil.rmtree(ext_files_dir)
+                shutil.rmtree(ext_files_dir, ignore_errors=True)
                 await del_ongoing_task(user_id)
                 return
 
@@ -925,7 +925,7 @@ async def unzipper_cb(unzip_bot: Client, query: CallbackQuery):
                             query, Messages.EXT_FAILED_TXT, unzip_client=unzip_bot
                         )
                         await archive_msg.reply(Messages.EXT_FAILED_TXT)
-                        shutil.rmtree(ext_files_dir)
+                        shutil.rmtree(ext_files_dir, ignore_errors=True)
                         LOGGER.error(Messages.FATAL_ERROR)
                         await del_ongoing_task(user_id)
                         return
@@ -940,7 +940,7 @@ async def unzipper_cb(unzip_bot: Client, query: CallbackQuery):
                         chat_id=query.message.chat.id, text=Messages.ERROR_TXT.format(e)
                     )
                 await archive_msg.reply(Messages.ERROR_TXT.format(e))
-                shutil.rmtree(ext_files_dir)
+                shutil.rmtree(ext_files_dir, ignore_errors=True)
                 try:
                     await ClientSession().close()
                 except:
