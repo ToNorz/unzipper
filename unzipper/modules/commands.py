@@ -266,7 +266,7 @@ async def get_stats(id):
     return stats_string
 
 
-@unzipperbot.on_message(filters.command("stats"))
+@unzipperbot.on_message(filters.command("stats") & filters.user(Config.BOT_OWNER))
 async def send_stats(_, message: Message):
     try:
         stats_msg = await message.reply(Messages.PROCESSING2)

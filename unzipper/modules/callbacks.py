@@ -158,6 +158,9 @@ async def unzipper_cb(unzip_bot: Client, query: CallbackQuery):
         )
 
     elif query.data.startswith("statscallback"):
+        if query.from_user.id != Config.BOT_OWNER:
+            await query.answer()
+            return
         if query.data.endswith("refresh"):
             await query.edit_message_text(text=Messages.REFRESH_STATS)
         text_stats = await get_stats(query.from_user.id)

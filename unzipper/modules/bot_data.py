@@ -747,7 +747,6 @@ Here is the list of the commands you can use (only in private btw) :
 **/about** : Know more about me
 **/clean** : Remove your files from my server. Also useful if a task failed
 **/mode** : Change your upload mode (either `doc` or `media`)
-**/stats** : Know all the current stats about me
 **/merge** : Merge splitted archives together
 **/done** : After you sent all the splitted archives, use this to merge them
 **/info** : Get full info about a [Message](https://docs.pyrogram.org/api/types/Message) (info returned by Pyrogram)
@@ -762,6 +761,7 @@ Here is the list of the commands you can use (only in private btw) :
 Here's all the commands that only the owner (you) can use :
 
 **/gitpull** : Pulls the latest changes from GitHub
+**/stats** : Know all the current stats about the bot
 **/broadcast** : Send something to all the users
 **/sendto {user_id}** : Same as broadcast but for a single user. Doesn't handle replies for now…
 **/ban {user_id}** : Ban an user. He can no longer use your bot, except if…
@@ -843,9 +843,6 @@ class Buttons:
             [
                 InlineKeyboardButton(Messages.HELP, callback_data="helpcallback"),
                 InlineKeyboardButton(Messages.ABOUT, callback_data="aboutcallback"),
-            ],
-            [
-                InlineKeyboardButton(Messages.STATS_BTN, callback_data="statscallback"),
             ],
         ]
     )
