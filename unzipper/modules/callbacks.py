@@ -49,6 +49,12 @@ from unzipper.helpers.database import (
     update_thumb,
     update_uploaded,
 )
+from unzipper.helpers.forcesub import (
+    JOIN_TEXT,
+    JOIN_TEXT_OK,
+    is_user_subscribed,
+    join_buttons,
+)
 from unzipper.helpers.unzip_help import (
     extentions_list,
     humanbytes,
@@ -122,6 +128,38 @@ async def async_generator(iterable):
 @unzipperbot.on_callback_query()
 async def unzipper_cb(unzip_bot: Client, query: CallbackQuery):
     uid = query.from_user.id
+
+    if query.data == "verifysub":
+        if await is_user_subscribed(unzip_bot, uid):
+            await query.answer("Verified ✓", show_alert=False)
+            try:
+                await query.edit_message_text(text=JOIN_TEXT_OK)
+            except:
+                pass
+        else:
+            await query.answer(
+                "You haven't joined both yet — try again after joining.",
+                show_alert=True,
+            )
+        return
+
+    if uid != Config.BOT_OWNER and not await is_user_subscribed(unzip_bot, uid):
+        try:
+            await query.edit_message_text(
+                text=JOIN_TEXT,
+                reply_markup=join_buttons(),
+                disable_web_page_preview=True,
+            )
+        except:
+            await unzip_bot.send_message(
+                chat_id=uid,
+                text=JOIN_TEXT,
+                reply_markup=join_buttons(),
+                disable_web_page_preview=True,
+            )
+        await query.answer()
+        return
+
     if uid != Config.BOT_OWNER:  # skipcq: PTC-W0048
         if await count_ongoing_tasks() >= Config.MAX_CONCURRENT_TASKS:
             ogtasks = await get_ongoing_tasks()

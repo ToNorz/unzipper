@@ -11,7 +11,7 @@ import psutil
 
 from asyncio import create_subprocess_shell, sleep, subprocess
 from contextlib import redirect_stderr, redirect_stdout
-from pyrogram import enums, filters
+from pyrogram import enums, filters, StopPropagation
 from pyrogram.errors import FloodWait, RPCError
 from pyrogram.types import Message
 from sys import executable
@@ -38,6 +38,11 @@ from unzipper.helpers.database import (
     get_users_list,
     set_maintenance,
 )
+from unzipper.helpers.forcesub import (
+    JOIN_TEXT,
+    is_user_subscribed,
+    join_buttons,
+)
 from unzipper.helpers.unzip_help import humanbytes, timeformat_sec
 from unzipper.modules.ext_script.custom_thumbnail import add_thumb, del_thumb
 from unzipper.modules.ext_script.ext_helper import get_files
@@ -58,9 +63,16 @@ def sufficient_disk_space(required_space):
 
 
 @unzipperbot.on_message(filters.private)
-async def _(_, message: Message):
+async def _(client, message: Message):
     await check_user(message)
     uid = message.from_user.id
+    if uid != Config.BOT_OWNER and not await is_user_subscribed(client, uid):
+        await message.reply(
+            JOIN_TEXT,
+            reply_markup=join_buttons(),
+            disable_web_page_preview=True,
+        )
+        raise StopPropagation
     if uid != Config.BOT_OWNER and await get_maintenance():
         await message.reply(Messages.MAINTENANCE_ON)
         return
