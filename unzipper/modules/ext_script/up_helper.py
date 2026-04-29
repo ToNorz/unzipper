@@ -332,9 +332,8 @@ async def send_file(unzip_bot, c_id, doc_f, query, full_path, log_msg, split):
         except:
             pass
         return
-    except BaseException as e:
-        LOGGER.error(e)
-        shutil.rmtree(full_path)
+    except Exception as e:
+        LOGGER.error("send_file failed for %s : %s", doc_f, e)
 
 
 async def forward_file(message, cid):

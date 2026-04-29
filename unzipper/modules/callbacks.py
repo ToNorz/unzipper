@@ -788,7 +788,8 @@ async def unzipper_cb(unzip_bot: Client, query: CallbackQuery):
                     )
                     await query.message.delete()
                     await del_ongoing_task(user_id)
-                    return shutil.rmtree(f"{Config.DOWNLOAD_LOCATION}/{user_id}")
+                    shutil.rmtree(f"{Config.DOWNLOAD_LOCATION}/{user_id}", ignore_errors=True)
+                    return
                 await query.message.edit(Messages.SPLITTING.format(newfname))
                 splitteddir = f"{Config.DOWNLOAD_LOCATION}/splitted/{user_id}"
                 os.makedirs(splitteddir, exist_ok=True)
@@ -1228,11 +1229,7 @@ async def unzipper_cb(unzip_bot: Client, query: CallbackQuery):
         await log_msg.reply(Messages.HOW_MANY_UPLOADED.format(sent_files))
         await update_uploaded(user_id, upload_count=sent_files)
         await del_ongoing_task(user_id)
-        try:
-            shutil.rmtree(f"{Config.DOWNLOAD_LOCATION}/{spl_data[1]}")
-        except Exception as e:
-            await query.message.edit(Messages.ERROR_TXT.format(e))
-            await archive_msg.reply(Messages.ERROR_TXT.format(e))
+        shutil.rmtree(f"{Config.DOWNLOAD_LOCATION}/{spl_data[1]}", ignore_errors=True)
 
     elif query.data == "cancel_dis":
         uid = query.from_user.id
