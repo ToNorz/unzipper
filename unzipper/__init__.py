@@ -9,13 +9,11 @@ from pyromod import listen  # skipcq: PY-W2000
 from config import Config
 
 boottime = time.time()
-plugins = dict(root="unzipper.modules")
 unzipperbot = pyrogram.Client(
     "UnzipperBot",
     bot_token=Config.BOT_TOKEN,
     api_id=Config.APP_ID,
     api_hash=Config.API_HASH,
-    plugins=plugins,
     sleep_threshold=10,
     max_concurrent_transmissions=Config.MAX_CONCURRENT_TRANSMISSIONS,
 )

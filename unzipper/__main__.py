@@ -2,6 +2,7 @@
 import os
 import signal
 import time
+from importlib import import_module
 
 from pyrogram import idle
 
@@ -15,6 +16,12 @@ from .helpers.start import (
     removal,
 )
 from .modules.bot_data import Messages
+
+
+def load_handlers():
+    for module in ("unzipper.modules.commands", "unzipper.modules.callbacks"):
+        import_module(module)
+        LOGGER.info("Loaded handler module: %s", module)
 
 
 def handler_stop_signals(signum, frame):
@@ -59,6 +66,7 @@ if __name__ == "__main__":
         os.makedirs(Config.DOWNLOAD_LOCATION, exist_ok=True)
         os.makedirs(Config.THUMB_LOCATION, exist_ok=True)
         LOGGER.info(Messages.STARTING_BOT)
+        load_handlers()
 
         # Handle Telegram FloodWait during startup (from rapid redeploys)
         from pyrogram.errors import FloodWait
@@ -102,4 +110,3 @@ if __name__ == "__main__":
         LOGGER.error("Error in main loop : %s", e)
     finally:
         shutdown_bot()
-
