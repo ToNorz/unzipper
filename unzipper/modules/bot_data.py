@@ -273,7 +273,7 @@ Send **/commands** to learn more
 • **Source code :** [UnxTar/unzip-bot](https://github.com/UnxTar/unzip-bot)
 • **Developer :** [UnxTar](https://github.com/UnxTar)
 
-**[Rate me ⭐](https://t.me/BotsArchive/2705)**
+**[Rate me ⭐](https://t.me/CoupOrg)**
 Made with ❤️ by **@COUPORG**
     """
 
@@ -1045,7 +1045,7 @@ class Buttons:
         [
             [
                 InlineKeyboardButton(
-                    Messages.RATE, url="https://t.me/BotsArchive/2705"
+                    Messages.RATE, url="https://t.me/CoupOrg"
                 ),
                 InlineKeyboardButton(Messages.DONATE, callback_data="donatecallback"),
             ],
