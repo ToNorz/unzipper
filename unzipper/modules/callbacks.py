@@ -9,7 +9,7 @@ import shutil
 import unzip_http
 
 from aiofiles import open as openfile
-from aiohttp import ClientSession, InvalidURL
+from aiohttp import ClientSession, ClientTimeout, InvalidURL, TCPConnector
 from email.parser import Parser
 from email.policy import default
 from fnmatch import fnmatch
@@ -62,10 +62,18 @@ rar_file_pattern = r"\.part\d+\.rar$"
 telegram_url_pattern = r"(?:http[s]?:\/\/)?(?:www\.)?t\.me\/([a-zA-Z0-9_]+)\/(\d+)"
 
 
+def get_download_session():
+    return ClientSession(
+        connector=TCPConnector(limit=0, ttl_dns_cache=300),
+        read_bufsize=Config.DOWNLOAD_READ_BUFFER_SIZE,
+        timeout=ClientTimeout(total=None, sock_connect=60, sock_read=None),
+    )
+
+
 async def download(url, path):
     try:
-        async with ClientSession() as session, session.get(
-            url, timeout=None, allow_redirects=True
+        async with get_download_session() as session, session.get(
+            url, allow_redirects=True
         ) as resp, openfile(path, mode="wb") as file:
             async for chunk in resp.content.iter_chunked(Config.CHUNK_SIZE):
                 await file.write(chunk)
@@ -77,13 +85,14 @@ async def download(url, path):
 
 async def download_with_progress(url, path, message, unzip_bot):
     try:
-        async with ClientSession() as session, session.get(
-            url, timeout=None, allow_redirects=True
+        async with get_download_session() as session, session.get(
+            url, allow_redirects=True
         ) as resp:
             total_size = int(resp.headers.get("Content-Length", 0))
             current_size = 0
             start_time = time()
             last_cancel_check = start_time
+            last_progress_update = start_time
 
             async with openfile(path, mode="wb") as file:
                 async for chunk in resp.content.iter_chunked(Config.CHUNK_SIZE):
@@ -98,14 +107,20 @@ async def download_with_progress(url, path, message, unzip_bot):
 
                     await file.write(chunk)
                     current_size += len(chunk)
-                    await progress_for_pyrogram(
-                        current_size,
-                        total_size,
-                        Messages.DL_URL.format(url),
-                        message,
-                        start_time,
-                        unzip_bot,
-                    )
+                    if (
+                        current_size == total_size
+                        or now - last_progress_update
+                        >= Config.DOWNLOAD_PROGRESS_INTERVAL
+                    ):
+                        last_progress_update = now
+                        await progress_for_pyrogram(
+                            current_size,
+                            total_size,
+                            Messages.DL_URL.format(url),
+                            message,
+                            start_time,
+                            unzip_bot,
+                        )
 
     except Exception:
         LOGGER.error(Messages.ERR_DL.format(url))
@@ -514,11 +529,13 @@ async def unzipper_cb(unzip_bot: Client, query: CallbackQuery):
                     )
                     splitted_data[1] = "tg_file"
                 if splitted_data[1] == "url":
-                    s = ClientSession()
+                    s = get_download_session()
                     async with s as session:
                         # Get the file size
                         unzip_head = await session.head(url, allow_redirects=True)
-                        f_size = unzip_head.headers.get("content-length")
+                        metadata_headers = unzip_head.headers
+                        metadata_status = unzip_head.status
+                        f_size = metadata_headers.get("content-length")
                         u_file_size = f_size if f_size else "undefined"
                         if u_file_size != "undefined" and not sufficient_disk_space(
                             int(u_file_size)
@@ -530,14 +547,23 @@ async def unzipper_cb(unzip_bot: Client, query: CallbackQuery):
                             Messages.LOG_TXT.format(user_id, url, u_file_size)
                         )
                         archive_msg = log_msg
-                        unzip_resp = await session.get(
-                            url, timeout=None, allow_redirects=True
-                        )
-                        if "application/" not in unzip_resp.headers.get("content-type"):
+                        content_type = metadata_headers.get("content-type", "")
+                        if not content_type or metadata_status != 200:
+                            async with session.get(
+                                url,
+                                headers={"Range": "bytes=0-0"},
+                                allow_redirects=True,
+                            ) as probe_resp:
+                                metadata_headers = probe_resp.headers
+                                metadata_status = probe_resp.status
+                                content_type = probe_resp.headers.get(
+                                    "content-type", ""
+                                )
+                        if "application/" not in content_type:
                             await del_ongoing_task(user_id)
                             await query.message.edit(Messages.NOT_AN_ARCHIVE)
                             return
-                        content_disposition = unzip_head.headers.get(
+                        content_disposition = metadata_headers.get(
                             "content-disposition"
                         )
                         rfnamebro = ""
@@ -551,7 +577,7 @@ async def unzipper_cb(unzip_bot: Client, query: CallbackQuery):
                                 rfnamebro = unquote(real_filename)
                         if rfnamebro == "":
                             rfnamebro = unquote(url.split("/")[-1])
-                        if unzip_resp.status == 200:
+                        if metadata_status in (200, 206):
                             os.makedirs(download_path, exist_ok=True)
                             s_time = time()
                             if real_filename:
@@ -580,8 +606,8 @@ async def unzipper_cb(unzip_bot: Client, query: CallbackQuery):
                             )
                             if (
                                 fext == "zip"
-                                and "accept-ranges" in unzip_resp.headers
-                                and "content-length" in unzip_resp.headers
+                                and "accept-ranges" in metadata_headers
+                                and "content-length" in metadata_headers
                             ):
                                 try:
                                     loop = asyncio.get_event_loop()

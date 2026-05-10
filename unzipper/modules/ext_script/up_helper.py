@@ -5,6 +5,7 @@ import pathlib
 import re
 import shutil
 import subprocess
+import zipfile
 
 from datetime import timedelta
 from time import time
@@ -48,6 +49,13 @@ async def get_size(doc_f):
         return -1
 
 
+def _zip_for_upload(source, destination):
+    with zipfile.ZipFile(
+        destination, "w", compression=zipfile.ZIP_STORED, allowZip64=True
+    ) as zip_file:
+        zip_file.write(source, arcname=os.path.basename(source))
+
+
 # Send file to a user
 async def send_file(unzip_bot, c_id, doc_f, query, full_path, log_msg, split):
     fsize = await get_size(doc_f)
@@ -55,6 +63,22 @@ async def send_file(unzip_bot, c_id, doc_f, query, full_path, log_msg, split):
         try:
             await unzipperbot.send_message(
                 c_id, Messages.EMPTY_FILE.format(os.path.basename(doc_f))
+            )
+        except:
+            pass
+        return
+    if fsize > Config.TG_MAX_SIZE:
+        LOGGER.warning(
+            "Skipping oversized upload for %s: %s bytes exceeds %s bytes",
+            doc_f,
+            fsize,
+            Config.TG_MAX_SIZE,
+        )
+        try:
+            await unzipperbot.send_message(
+                c_id,
+                Messages.TOO_LARGE,
+                disable_notification=True,
             )
         except:
             pass
@@ -182,7 +206,6 @@ async def send_file(unzip_bot, c_id, doc_f, query, full_path, log_msg, split):
                         chat_id=c_id,
                         document=doc_f,
                         caption=Messages.EXT_CAPTION.format(fname),
-                        force_document=True,
                         disable_notification=True,
                         progress=progress_for_pyrogram,
                         progress_args=progress_args,
@@ -191,7 +214,28 @@ async def send_file(unzip_bot, c_id, doc_f, query, full_path, log_msg, split):
                     raise
                 except Exception as e:
                     LOGGER.warning(f"Document upload also failed for {doc_f}: {e}")
-                    raise  # Let the outer handler deal with it
+                    error_str = str(e)
+                    if "MEDIA_FILE_INVALID" not in error_str:
+                        raise  # Let the outer handler deal with it
+                    zipped_doc = f"{doc_f}.upload.zip"
+                    try:
+                        await asyncio.to_thread(_zip_for_upload, doc_f, zipped_doc)
+                        zipped_size = await get_size(zipped_doc)
+                        if zipped_size in (-1, 0) or zipped_size > Config.TG_MAX_SIZE:
+                            raise e
+                        await unzip_bot.send_document(
+                            chat_id=c_id,
+                            document=zipped_doc,
+                            caption=Messages.EXT_CAPTION.format(fname + ".zip"),
+                            disable_notification=True,
+                            progress=progress_for_pyrogram,
+                            progress_args=progress_args,
+                        )
+                    finally:
+                        try:
+                            os.remove(zipped_doc)
+                        except:
+                            pass
 
             # Upload succeeded — clean up progress message and file
             try:
