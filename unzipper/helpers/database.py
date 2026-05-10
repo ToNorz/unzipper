@@ -455,9 +455,9 @@ async def ensure_database_indexes():
     await ongoing_tasks.create_index("user_id", unique=True)
     await cancel_tasks.create_index("user_id", unique=True)
     await merge_tasks.create_index("user_id", unique=True)
-    await uploaded_db.create_index("_id", unique=True)
-    await mode_db.create_index("_id", unique=True)
-    await thumb_db.create_index("_id", unique=True)
+    await uploaded_db.create_index("_id")
+    await mode_db.create_index("_id")
+    await thumb_db.create_index("_id")
 
 
 # DB for maintenance mode
