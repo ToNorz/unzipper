@@ -322,15 +322,17 @@ async def count_ongoing_tasks():
 
 
 async def add_ongoing_task(user_id, start_time, task_type):
-    await ongoing_tasks.insert_one(
-        {"user_id": user_id, "start_time": start_time, "type": task_type}
+    await ongoing_tasks.update_one(
+        {"user_id": user_id},
+        {"$set": {"user_id": user_id, "start_time": start_time, "type": task_type}},
+        upsert=True,
     )
 
 
 async def del_ongoing_task(user_id):
     is_exist = await ongoing_tasks.find_one({"user_id": user_id})
     if is_exist is not None and is_exist:
-        await ongoing_tasks.delete_one({"user_id": user_id})
+        await ongoing_tasks.delete_many({"user_id": user_id})
     else:
         return
 
@@ -419,6 +421,43 @@ async def get_merge_task_message_id(user_id):
 
 async def clear_merge_tasks():
     await merge_tasks.delete_many({})
+
+
+async def _dedupe_collection(collection, key):
+    seen = set()
+    async for item in collection.find({}):
+        value = item.get(key)
+        if value in seen:
+            await collection.delete_one({"_id": item.get("_id")})
+        else:
+            seen.add(value)
+
+
+async def ensure_database_indexes():
+    await _dedupe_collection(user_db, "user_id")
+    await _dedupe_collection(b_user_db, "banned_user_id")
+    await _dedupe_collection(cancel_tasks, "user_id")
+    await _dedupe_collection(merge_tasks, "user_id")
+    await _dedupe_collection(uploaded_db, "_id")
+    await _dedupe_collection(mode_db, "_id")
+    await _dedupe_collection(thumb_db, "_id")
+
+    seen_task_users = set()
+    async for task in ongoing_tasks.find({}).sort("start_time", -1):
+        user_id = task.get("user_id")
+        if user_id in seen_task_users:
+            await ongoing_tasks.delete_one({"_id": task.get("_id")})
+        else:
+            seen_task_users.add(user_id)
+
+    await user_db.create_index("user_id", unique=True)
+    await b_user_db.create_index("banned_user_id", unique=True)
+    await ongoing_tasks.create_index("user_id", unique=True)
+    await cancel_tasks.create_index("user_id", unique=True)
+    await merge_tasks.create_index("user_id", unique=True)
+    await uploaded_db.create_index("_id", unique=True)
+    await mode_db.create_index("_id", unique=True)
+    await thumb_db.create_index("_id", unique=True)
 
 
 # DB for maintenance mode

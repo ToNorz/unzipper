@@ -627,7 +627,11 @@ If you sent /done by mistake and haven't sent all the files yet, just ignore thi
  ↳ **Total disk space :** `{}`
  ↳ **Used :** `{} - {}%`
  ↳ **Free :** `{}`
- ↳ **Ongoing tasks :** `{}`
+ ↳ **Ongoing tasks :** `{}/{}`
+ ↳ **Extract tasks :** `{}`
+ ↳ **Merge tasks :** `{}`
+ ↳ **Oldest task age :** `{}`
+ ↳ **Queue timeout :** `{} min`
 
 **🌐 Network usage :**
  ↳ **Uploaded :** `{}`

@@ -1,5 +1,6 @@
 # Copyright (c) 2022 - 2024 UnxTar
 import asyncio
+import json
 import os
 import re
 import shutil
@@ -48,6 +49,7 @@ from unzipper.helpers.database import (
     update_uploaded,
 )
 from unzipper.helpers.unzip_help import (
+    TransferCancelled,
     extentions_list,
     humanbytes,
     progress_for_pyrogram,
@@ -119,6 +121,8 @@ async def download_with_progress(url, path, message, unzip_bot):
                             unzip_bot,
                         )
 
+    except TransferCancelled:
+        return False
     except Exception:
         LOGGER.error(Messages.ERR_DL.format(url))
 
@@ -130,10 +134,67 @@ async def async_generator(iterable):
         yield item
 
 
+def log_task_event(event, **fields):
+    LOGGER.info(json.dumps({"event": event, **fields}, default=str))
+
+
+async def wait_for_task_slot(unzip_bot, user_id):
+    if user_id == Config.BOT_OWNER:
+        return True
+    ogtasks = await get_ongoing_tasks()
+    if len(ogtasks) < Config.MAX_CONCURRENT_TASKS or any(
+        task.get("user_id") == user_id for task in ogtasks
+    ):
+        return True
+
+    notice = await unzip_bot.send_message(
+        chat_id=user_id,
+        text=(
+            "All workers are busy. Your request is queued and will start "
+            "when a slot opens."
+        ),
+    )
+    waited = 0
+    while waited < Config.TASK_QUEUE_WAIT_TIMEOUT:
+        await asyncio.sleep(Config.TASK_QUEUE_POLL_INTERVAL)
+        waited += Config.TASK_QUEUE_POLL_INTERVAL
+        ogtasks = await get_ongoing_tasks()
+        if len(ogtasks) < Config.MAX_CONCURRENT_TASKS or any(
+            task.get("user_id") == user_id for task in ogtasks
+        ):
+            try:
+                await notice.edit("A worker slot is free now. Starting your task...")
+            except:
+                pass
+            return True
+        if waited % 60 == 0:
+            try:
+                await notice.edit(
+                    "Still queued. I will keep checking for a free worker slot."
+                )
+            except:
+                pass
+
+    try:
+        await notice.edit(
+            "The queue wait timed out. Please try again in a little while."
+        )
+    except:
+        pass
+    return False
+
+
 async def upload_all_extracted_files(
     unzip_bot, query, user_id, chat_id, download_id, file_path, log_msg
 ):
     paths = await get_files(path=file_path)
+    log_task_event(
+        "upload_all_started",
+        user_id=user_id,
+        chat_id=chat_id,
+        file_count=len(paths),
+        path=file_path,
+    )
     LOGGER.info("upload_all paths : " + str(paths))
     if not paths:
         try:
@@ -145,13 +206,13 @@ async def upload_all_extracted_files(
         return
 
     sent_files = 0
+    failed_files = []
     await query.message.edit(Messages.SEND_ALL_FILES)
     async_paths = async_generator(paths)
     async for file in async_paths:
-        sent_files += 1
         fsize = await get_size(file)
         if fsize <= Config.TG_MAX_SIZE:
-            await send_file(
+            status = await send_file(
                 unzip_bot=unzip_bot,
                 c_id=chat_id,
                 doc_f=file,
@@ -159,6 +220,19 @@ async def upload_all_extracted_files(
                 full_path=f"{Config.DOWNLOAD_LOCATION}/{download_id}",
                 log_msg=log_msg,
                 split=False,
+            )
+            if status == "success":
+                sent_files += 1
+            elif status == "cancelled":
+                await del_ongoing_task(user_id)
+                return
+            else:
+                failed_files.append(file)
+            log_task_event(
+                "upload_file_finished",
+                user_id=user_id,
+                file=file,
+                status=status,
             )
             continue
 
@@ -182,8 +256,7 @@ async def upload_all_extracted_files(
         await smessage.edit(Messages.SEND_ALL_PARTS.format(fname))
         async_splittedfiles = async_generator(splittedfiles)
         async for s_file in async_splittedfiles:
-            sent_files += 1
-            await send_file(
+            status = await send_file(
                 unzip_bot=unzip_bot,
                 c_id=chat_id,
                 doc_f=s_file,
@@ -191,6 +264,19 @@ async def upload_all_extracted_files(
                 full_path=splitteddir,
                 log_msg=log_msg,
                 split=True,
+            )
+            if status == "success":
+                sent_files += 1
+            elif status == "cancelled":
+                await del_ongoing_task(user_id)
+                return
+            else:
+                failed_files.append(file)
+            log_task_event(
+                "upload_part_finished",
+                user_id=user_id,
+                file=s_file,
+                status=status,
             )
         try:
             shutil.rmtree(splitteddir)
@@ -202,15 +288,46 @@ async def upload_all_extracted_files(
             pass
 
     try:
+        await log_msg.reply(Messages.HOW_MANY_UPLOADED.format(sent_files))
+    except Exception as e:
+        LOGGER.warning("Failed to write upload count log for %s: %s", user_id, e)
+    await update_uploaded(user_id, upload_count=sent_files)
+    await del_ongoing_task(user_id)
+    if failed_files:
+        log_task_event(
+            "upload_all_finished",
+            user_id=user_id,
+            sent_files=sent_files,
+            failed_files=len(failed_files),
+            status="partial_failure",
+        )
+        failed_names = "\n".join(f"- `{os.path.basename(file)}`" for file in failed_files[:10])
+        if len(failed_files) > 10:
+            failed_names += f"\n...and {len(failed_files) - 10} more"
+        fail_text = (
+            f"⚠️ Uploaded {sent_files} file(s), but {len(failed_files)} failed.\n"
+            f"The failed files were kept on disk for retry:\n{failed_names}"
+        )
+        await query.message.edit(fail_text)
+        try:
+            await log_msg.reply(fail_text)
+        except Exception as e:
+            LOGGER.warning("Failed to write upload failure log for %s: %s", user_id, e)
+        return
+    try:
         await unzip_bot.send_message(
             chat_id=user_id, text=Messages.UPLOADED, reply_markup=Buttons.RATE_ME
         )
         await query.message.edit(text=Messages.UPLOADED, reply_markup=Buttons.RATE_ME)
     except:
         pass
-    await log_msg.reply(Messages.HOW_MANY_UPLOADED.format(sent_files))
-    await update_uploaded(user_id, upload_count=sent_files)
-    await del_ongoing_task(user_id)
+    log_task_event(
+        "upload_all_finished",
+        user_id=user_id,
+        sent_files=sent_files,
+        failed_files=0,
+        status="success",
+    )
     try:
         shutil.rmtree(f"{Config.DOWNLOAD_LOCATION}/{download_id}")
     except Exception as e:
@@ -222,15 +339,8 @@ async def upload_all_extracted_files(
 @unzipperbot.on_callback_query()
 async def unzipper_cb(unzip_bot: Client, query: CallbackQuery):
     uid = query.from_user.id
-    if uid != Config.BOT_OWNER:  # skipcq: PTC-W0048
-        if await count_ongoing_tasks() >= Config.MAX_CONCURRENT_TASKS:
-            ogtasks = await get_ongoing_tasks()
-            if not any(ogtask.get("user_id") == uid for ogtask in ogtasks):
-                await unzip_bot.send_message(
-                    chat_id=uid,
-                    text=Messages.MAX_TASKS.format(Config.MAX_CONCURRENT_TASKS),
-                )
-                return
+    if not await wait_for_task_slot(unzip_bot, uid):
+        return
 
     if uid != Config.BOT_OWNER and await get_maintenance():
         await answer_query(query, Messages.MAINTENANCE_ON)
@@ -360,6 +470,7 @@ async def unzipper_cb(unzip_bot: Client, query: CallbackQuery):
         m_id = query.message.id
         start_time = time()
         await add_ongoing_task(user_id, start_time, "merge")
+        log_task_event("task_started", user_id=user_id, task_type="merge")
         s_id = await get_merge_task_message_id(user_id)
         merge_msg = await query.message.edit(Messages.PROCESSING_TASK)
         download_path = f"{Config.DOWNLOAD_LOCATION}/{user_id}/merge"
@@ -538,6 +649,7 @@ async def unzipper_cb(unzip_bot: Client, query: CallbackQuery):
         user_id = query.from_user.id
         start_time = time()
         await add_ongoing_task(user_id, start_time, "extract")
+        log_task_event("task_started", user_id=user_id, task_type="extract")
         download_path = f"{Config.DOWNLOAD_LOCATION}/{user_id}"
         ext_files_dir = f"{download_path}/extracted"
         r_message = query.message.reply_to_message
@@ -741,7 +853,7 @@ async def unzipper_cb(unzip_bot: Client, query: CallbackQuery):
                 newfname = renamed.split("/")[-1]
                 fsize = await get_size(renamed)
                 if fsize <= Config.TG_MAX_SIZE:
-                    await send_file(
+                    status = await send_file(
                         unzip_bot=unzip_bot,
                         c_id=user_id,
                         doc_f=renamed,
@@ -750,6 +862,12 @@ async def unzipper_cb(unzip_bot: Client, query: CallbackQuery):
                         log_msg=log_msg,
                         split=False,
                     )
+                    if status != "success":
+                        await del_ongoing_task(user_id)
+                        await query.message.edit(
+                            f"Upload failed for `{newfname}`. The file was kept for retry."
+                        )
+                        return
                     await query.message.delete()
                     await del_ongoing_task(user_id)
                     return shutil.rmtree(f"{Config.DOWNLOAD_LOCATION}/{user_id}")
@@ -769,8 +887,7 @@ async def unzipper_cb(unzip_bot: Client, query: CallbackQuery):
                 await query.message.edit(Messages.SEND_ALL_PARTS.format(newfname))
                 async_splittedfiles = async_generator(splittedfiles)
                 async for file in async_splittedfiles:
-                    sent_files += 1
-                    await send_file(
+                    status = await send_file(
                         unzip_bot=unzip_bot,
                         c_id=user_id,
                         doc_f=file,
@@ -779,6 +896,15 @@ async def unzipper_cb(unzip_bot: Client, query: CallbackQuery):
                         log_msg=log_msg,
                         split=True,
                     )
+                    if status == "success":
+                        sent_files += 1
+                    else:
+                        await del_ongoing_task(user_id)
+                        await query.message.edit(
+                            f"Upload failed for `{os.path.basename(file)}`. "
+                            "The remaining files were kept for retry."
+                        )
+                        return
                 try:
                     shutil.rmtree(splitteddir)
                     shutil.rmtree(renamed.replace(newfname, ""))
@@ -917,6 +1043,16 @@ async def unzipper_cb(unzip_bot: Client, query: CallbackQuery):
         user_id = query.from_user.id
         spl_data = query.data.split("|")
         file_path = f"{Config.DOWNLOAD_LOCATION}/{spl_data[1]}/extracted"
+        await upload_all_extracted_files(
+            unzip_bot=unzip_bot,
+            query=query,
+            user_id=user_id,
+            chat_id=spl_data[2],
+            download_id=spl_data[1],
+            file_path=file_path,
+            log_msg=log_msg,
+        )
+        return
         try:
             urled = spl_data[4] if isinstance(spl_data[4], bool) else False
         except:
@@ -1063,6 +1199,16 @@ async def unzipper_cb(unzip_bot: Client, query: CallbackQuery):
         user_id = query.from_user.id
         spl_data = query.data.split("|")
         file_path = f"{Config.DOWNLOAD_LOCATION}/{spl_data[1]}/extracted"
+        await upload_all_extracted_files(
+            unzip_bot=unzip_bot,
+            query=query,
+            user_id=user_id,
+            chat_id=spl_data[2],
+            download_id=spl_data[1],
+            file_path=file_path,
+            log_msg=log_msg,
+        )
+        return
         try:
             urled = spl_data[4] if isinstance(spl_data[3], bool) else False
         except:

@@ -57,6 +57,45 @@ def sufficient_disk_space(required_space):
     return False
 
 
+async def wait_for_message_task_slot(message):
+    uid = message.from_user.id
+    ogtasks = await get_ongoing_tasks()
+    if len(ogtasks) < Config.MAX_CONCURRENT_TASKS or any(
+        uid == task.get("user_id") for task in ogtasks
+    ):
+        return True
+
+    notice = await message.reply(
+        "All workers are busy. Your request is queued and will start when a slot opens."
+    )
+    waited = 0
+    while waited < Config.TASK_QUEUE_WAIT_TIMEOUT:
+        await sleep(Config.TASK_QUEUE_POLL_INTERVAL)
+        waited += Config.TASK_QUEUE_POLL_INTERVAL
+        ogtasks = await get_ongoing_tasks()
+        if len(ogtasks) < Config.MAX_CONCURRENT_TASKS or any(
+            uid == task.get("user_id") for task in ogtasks
+        ):
+            try:
+                await notice.edit("A worker slot is free now. Starting your task...")
+            except:
+                pass
+            return True
+        if waited % 60 == 0:
+            try:
+                await notice.edit(
+                    "Still queued. I will keep checking for a free worker slot."
+                )
+            except:
+                pass
+
+    try:
+        await notice.edit("The queue wait timed out. Please try again later.")
+    except:
+        pass
+    return False
+
+
 @unzipperbot.on_message(filters.private)
 async def _(_, message: Message):
     await check_user(message)
@@ -66,19 +105,8 @@ async def _(_, message: Message):
         return
     if uid == Config.BOT_OWNER:
         return
-    if await count_ongoing_tasks() >= Config.MAX_CONCURRENT_TASKS:
-        ogtasks = await get_ongoing_tasks()
-        if not any(uid == task.get("user_id") for task in ogtasks):
-            try:
-                await message.reply(
-                    text=Messages.MAX_TASKS.format(Config.MAX_CONCURRENT_TASKS),
-                )
-            except:
-                await unzipperbot.send_message(
-                    chat_id=uid,
-                    text=Messages.MAX_TASKS.format(Config.MAX_CONCURRENT_TASKS),
-                )
-            return
+    if not await wait_for_message_task_slot(message):
+        return
 
 
 @unzipperbot.on_message(filters.command("start"))
@@ -234,7 +262,16 @@ async def get_stats(id):
     uptime = timeformat_sec(time.time() - boottime)
     total_users = await count_users()
     total_banned_users = await count_banned_users()
-    ongoing_tasks = await count_ongoing_tasks()
+    ongoing_task_docs = await get_ongoing_tasks()
+    ongoing_tasks = len(ongoing_task_docs)
+    extract_tasks = sum(1 for task in ongoing_task_docs if task.get("type") == "extract")
+    merge_tasks = sum(1 for task in ongoing_task_docs if task.get("type") == "merge")
+    if ongoing_task_docs:
+        oldest_task_age = timeformat_sec(
+            time.time() - min(task.get("start_time", time.time()) for task in ongoing_task_docs)
+        )
+    else:
+        oldest_task_age = "0 s"
 
     if id == Config.BOT_OWNER:
         stats_string = Messages.STATS_OWNER.format(
@@ -245,6 +282,11 @@ async def get_stats(id):
             disk_usage,
             free,
             ongoing_tasks,
+            Config.MAX_CONCURRENT_TASKS,
+            extract_tasks,
+            merge_tasks,
+            oldest_task_age,
+            Config.TASK_QUEUE_WAIT_TIMEOUT // 60,
             sent,
             recv,
             cpu_usage,
@@ -429,7 +471,7 @@ async def info_user(_, message: Message):
     except:
         await info_user_msg.edit(Messages.PROVIDE_UID)
         return
-    up_count = get_uploaded(user_id)
+    up_count = await get_uploaded(user_id)
     if up_count == "":
         up_count = Messages.UNABLE_FETCH
     await info_user_msg.edit(Messages.USER_INFO.format(user_id, up_count))
@@ -582,7 +624,7 @@ async def send_logs(user_id):
 
 
 def clear_logs():
-    with open("file.txt", "w") as f:
+    with open("unzip-log.txt", "w") as f:
         f.close()
 
 

@@ -1,4 +1,5 @@
 # Copyright (c) 2022 - 2024 UnxTar
+import asyncio
 import os
 import signal
 import time
@@ -15,6 +16,7 @@ from .helpers.start import (
     start_cron_jobs,
     removal,
 )
+from .helpers.database import ensure_database_indexes
 from .modules.bot_data import Messages
 
 
@@ -84,6 +86,8 @@ if __name__ == "__main__":
                 time.sleep(wait_time + 5)
                 LOGGER.info("Retrying bot startup...")
 
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(ensure_database_indexes())
         starttime = time.strftime("%Y/%m/%d - %H:%M:%S")
         unzipperbot.send_message(
             chat_id=Config.LOGS_CHANNEL, text=Messages.START_TXT.format(starttime)
@@ -93,7 +97,7 @@ if __name__ == "__main__":
         LOGGER.info(Messages.CHECK_LOG)
         if check_logs():
             LOGGER.info(Messages.LOG_CHECKED)
-            removal(True)
+            removal(Config.CLEAR_DOWNLOADS_ON_START)
             start_cron_jobs()
             LOGGER.info(Messages.BOT_RUNNING)
             idle()

@@ -12,6 +12,10 @@ from unzipper.modules.bot_data import Buttons, Messages
 _last_progress_update = {}
 
 
+class TransferCancelled(Exception):
+    pass
+
+
 async def progress_for_pyrogram(current, total, ud_type, message, start, unzip_bot):
     now = time.time()
     diff = now - start
@@ -23,10 +27,9 @@ async def progress_for_pyrogram(current, total, ud_type, message, start, unzip_b
     if message.from_user is not None and (now - last_update) >= 3:
         if await get_cancel_task(message.from_user.id):
             _last_progress_update.pop(msg_id, None)
-            unzip_bot.stop_transmission()
             await message.edit(text=Messages.DL_STOPPED)
             await del_cancel_task(message.from_user.id)
-            return
+            raise TransferCancelled(Messages.DL_STOPPED)
 
     # Update progress every 5 seconds or at completion
     if current == total or (now - last_update) >= 5:

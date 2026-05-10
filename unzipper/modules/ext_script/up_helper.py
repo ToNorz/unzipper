@@ -15,6 +15,7 @@ from config import Config
 from unzipper import LOGGER, unzipperbot
 from unzipper.helpers.database import get_upload_mode
 from unzipper.helpers.unzip_help import (
+    TransferCancelled,
     extentions_list,
     progress_for_pyrogram,
     progress_urls,
@@ -91,7 +92,7 @@ async def send_file(unzip_bot, c_id, doc_f, query, full_path, log_msg, split):
             )
         except:
             pass
-        return
+        return "skipped"
     if fsize > Config.TG_MAX_SIZE:
         LOGGER.warning(
             "Skipping oversized upload for %s: %s bytes exceeds %s bytes",
@@ -107,7 +108,7 @@ async def send_file(unzip_bot, c_id, doc_f, query, full_path, log_msg, split):
             )
         except:
             pass
-        return
+        return "too_large"
 
     upmsg = None
     max_retries = 3
@@ -149,7 +150,7 @@ async def send_file(unzip_bot, c_id, doc_f, query, full_path, log_msg, split):
                         progress_args=progress_args,
                     )
                     uploaded = True
-                except (FloodWait, FileNotFoundError):
+                except (FloodWait, FileNotFoundError, TransferCancelled):
                     raise  # Let the outer handler deal with these
                 except Exception as e:
                     LOGGER.warning(f"Audio upload failed for {doc_f}, falling back to document: {e}")
@@ -165,7 +166,7 @@ async def send_file(unzip_bot, c_id, doc_f, query, full_path, log_msg, split):
                         progress_args=progress_args,
                     )
                     uploaded = True
-                except (FloodWait, FileNotFoundError):
+                except (FloodWait, FileNotFoundError, TransferCancelled):
                     raise
                 except Exception as e:
                     LOGGER.warning(f"Photo upload failed for {doc_f}, falling back to document: {e}")
@@ -218,7 +219,7 @@ async def send_file(unzip_bot, c_id, doc_f, query, full_path, log_msg, split):
                             os.remove(vid_thumb)
                         except:
                             pass
-                except (FloodWait, FileNotFoundError):
+                except (FloodWait, FileNotFoundError, TransferCancelled):
                     raise
                 except Exception as e:
                     LOGGER.warning(f"Video upload failed for {doc_f}, falling back to document: {e}")
@@ -235,7 +236,7 @@ async def send_file(unzip_bot, c_id, doc_f, query, full_path, log_msg, split):
                         progress=progress_for_pyrogram,
                         progress_args=progress_args,
                     )
-                except (FloodWait, FileNotFoundError):
+                except (FloodWait, FileNotFoundError, TransferCancelled):
                     raise
                 except Exception as e:
                     LOGGER.warning(f"Document upload also failed for {doc_f}: {e}")
@@ -269,7 +270,7 @@ async def send_file(unzip_bot, c_id, doc_f, query, full_path, log_msg, split):
                             )
                             LOGGER.info("Uploaded remuxed video for %s", doc_f)
                             uploaded = True
-                        except (FloodWait, FileNotFoundError):
+                        except (FloodWait, FileNotFoundError, TransferCancelled):
                             raise
                         except Exception as remux_error:
                             LOGGER.warning(
@@ -318,8 +319,16 @@ async def send_file(unzip_bot, c_id, doc_f, query, full_path, log_msg, split):
                 pass
             # Small delay to avoid triggering FloodWait on next file
             await asyncio.sleep(1)
-            return  # Success, exit the retry loop
+            return "success"
 
+        except TransferCancelled:
+            LOGGER.warning("Upload cancelled for %s", doc_f)
+            if upmsg:
+                try:
+                    await upmsg.delete()
+                except:
+                    pass
+            return "cancelled"
         except FloodWait as f:
             LOGGER.warning(f"FloodWait for {f.value}s on attempt {attempt + 1} uploading {doc_f}")
             if upmsg:
@@ -342,8 +351,8 @@ async def send_file(unzip_bot, c_id, doc_f, query, full_path, log_msg, split):
                 )
             except:
                 pass
-            return
-        except BaseException as e:
+            return "missing"
+        except Exception as e:
             error_str = str(e)
             is_permanent = "400" in error_str or "INVALID" in error_str or "BAD_REQUEST" in error_str
             LOGGER.error(f"send_file failed for {doc_f} (attempt {attempt + 1}, permanent={is_permanent}): {e}")
@@ -365,7 +374,8 @@ async def send_file(unzip_bot, c_id, doc_f, query, full_path, log_msg, split):
                 )
             except:
                 pass
-            return
+            return "failed"
+    return "failed"
 
 
 async def forward_file(message, cid):
@@ -408,8 +418,8 @@ async def send_url_logs(unzip_bot, c_id, doc_f, source, message):
             chat_id=Config.LOGS_CHANNEL,
             text=Messages.ARCHIVE_GONE,
         )
-    except BaseException:
-        pass
+    except Exception as e:
+        LOGGER.warning("Failed to send URL log for %s: %s", doc_f, e)
 
 
 async def merge_splitted_archives(user_id, path):

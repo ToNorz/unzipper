@@ -32,3 +32,8 @@ class Config:
     MAX_CONCURRENT_TASKS = 75
     MAX_TASK_DURATION_EXTRACT = 120 * 60  # 2 hours (in seconds)
     MAX_TASK_DURATION_MERGE = 240 * 60  # 4 hours (in seconds)
+    CLEAR_DOWNLOADS_ON_START = (
+        os.environ.get("CLEAR_DOWNLOADS_ON_START", "false").lower() == "true"
+    )
+    TASK_QUEUE_WAIT_TIMEOUT = int(os.environ.get("TASK_QUEUE_WAIT_TIMEOUT", 30 * 60))
+    TASK_QUEUE_POLL_INTERVAL = int(os.environ.get("TASK_QUEUE_POLL_INTERVAL", 15))
