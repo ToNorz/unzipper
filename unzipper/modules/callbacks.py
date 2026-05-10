@@ -5,7 +5,7 @@ import os
 import re
 import shutil
 
-import aiohttp
+
 import unzip_http
 
 from aiofiles import open as openfile
@@ -64,8 +64,7 @@ telegram_url_pattern = r"(?:http[s]?:\/\/)?(?:www\.)?t\.me\/([a-zA-Z0-9_]+)\/(\d
 
 async def download(url, path):
     try:
-        connector = aiohttp.TCPConnector(limit=0, force_close=False, enable_cleanup_closed=True)
-        async with ClientSession(connector=connector) as session, session.get(
+        async with ClientSession() as session, session.get(
             url, timeout=None, allow_redirects=True
         ) as resp, openfile(path, mode="wb") as file:
             async for chunk in resp.content.iter_chunked(Config.CHUNK_SIZE):
@@ -78,22 +77,24 @@ async def download(url, path):
 
 async def download_with_progress(url, path, message, unzip_bot):
     try:
-        connector = aiohttp.TCPConnector(limit=0, force_close=False, enable_cleanup_closed=True)
-        async with ClientSession(connector=connector, read_bufsize=Config.CHUNK_SIZE) as session, session.get(
+        async with ClientSession() as session, session.get(
             url, timeout=None, allow_redirects=True
         ) as resp:
             total_size = int(resp.headers.get("Content-Length", 0))
             current_size = 0
             start_time = time()
+            last_cancel_check = start_time
 
             async with openfile(path, mode="wb") as file:
                 async for chunk in resp.content.iter_chunked(Config.CHUNK_SIZE):
-                    if message.from_user is not None and await get_cancel_task(
-                        message.from_user.id
-                    ):
-                        await message.edit(text=Messages.DL_STOPPED)
-                        await del_cancel_task(message.from_user.id)
-                        return False
+                    # Throttle cancel-check to once per 5 seconds
+                    now = time()
+                    if message.from_user is not None and (now - last_cancel_check) >= 5:
+                        last_cancel_check = now
+                        if await get_cancel_task(message.from_user.id):
+                            await message.edit(text=Messages.DL_STOPPED)
+                            await del_cancel_task(message.from_user.id)
+                            return False
 
                     await file.write(chunk)
                     current_size += len(chunk)

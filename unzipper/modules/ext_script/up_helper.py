@@ -141,9 +141,10 @@ async def send_file(unzip_bot, c_id, doc_f, query, full_path, log_msg, split):
                             if duration > 0:
                                 midpoint = duration // 2
                                 await run_shell_cmds(
-                                    f'ffmpeg -ss {midpoint} -i "{doc_f}" -vf "scale=320:320:force_original_aspect_ratio=decrease" -vframes 1 "{thmb_pth}"'
+                                    f'ffmpeg -ss {midpoint} -i "{doc_f}" -vf "scale=320:320:force_original_aspect_ratio=decrease" -frames:v 1 -update 1 "{thmb_pth}"'
                                 )
-                            if os.path.exists(thmb_pth):
+                            # Validate the thumbnail is real (not empty/corrupted)
+                            if os.path.exists(thmb_pth) and os.path.getsize(thmb_pth) > 0:
                                 vid_thumb = thmb_pth
                             else:
                                 vid_thumb = str(Config.BOT_THUMB)
@@ -175,16 +176,22 @@ async def send_file(unzip_bot, c_id, doc_f, query, full_path, log_msg, split):
 
             # Fallback: send as document (also used for non-media mode)
             if not uploaded:
-                await unzip_bot.send_document(
-                    chat_id=c_id,
-                    document=doc_f,
-                    thumb=thumb_image,
-                    caption=Messages.EXT_CAPTION.format(fname),
-                    force_document=True,
-                    disable_notification=True,
-                    progress=progress_for_pyrogram,
-                    progress_args=progress_args,
-                )
+                try:
+                    # Try without thumbnail first — thumb can cause MEDIA_FILE_INVALID
+                    await unzip_bot.send_document(
+                        chat_id=c_id,
+                        document=doc_f,
+                        caption=Messages.EXT_CAPTION.format(fname),
+                        force_document=True,
+                        disable_notification=True,
+                        progress=progress_for_pyrogram,
+                        progress_args=progress_args,
+                    )
+                except (FloodWait, FileNotFoundError):
+                    raise
+                except Exception as e:
+                    LOGGER.warning(f"Document upload also failed for {doc_f}: {e}")
+                    raise  # Let the outer handler deal with it
 
             # Upload succeeded — clean up progress message and file
             try:
@@ -223,17 +230,20 @@ async def send_file(unzip_bot, c_id, doc_f, query, full_path, log_msg, split):
                 pass
             return
         except BaseException as e:
-            LOGGER.error(f"send_file failed for {doc_f} (attempt {attempt + 1}): {e}")
+            error_str = str(e)
+            is_permanent = "400" in error_str or "INVALID" in error_str or "BAD_REQUEST" in error_str
+            LOGGER.error(f"send_file failed for {doc_f} (attempt {attempt + 1}, permanent={is_permanent}): {e}")
             if upmsg:
                 try:
                     await upmsg.delete()
                 except:
                     pass
                 upmsg = None
-            if attempt < max_retries - 1:
+            # Don't retry permanent errors (400 Bad Request) — same file will always fail
+            if not is_permanent and attempt < max_retries - 1:
                 await asyncio.sleep(2)
-                continue  # Retry
-            # Final attempt failed — notify user but do NOT delete full_path
+                continue  # Retry only transient errors
+            # Permanent error or final attempt — notify user, don't waste more bandwidth
             try:
                 await unzipperbot.send_message(
                     c_id,
