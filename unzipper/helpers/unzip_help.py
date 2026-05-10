@@ -3,7 +3,8 @@ import math
 import time
 
 from asyncio import sleep
-from pyrogram.errors import FloodWait
+from pyrogram.errors import FloodWait, MessageNotModified
+from unzipper import LOGGER
 from unzipper.helpers.database import del_cancel_task, get_cancel_task
 from unzipper.modules.bot_data import Buttons, Messages
 
@@ -33,14 +34,17 @@ async def progress_for_pyrogram(current, total, ud_type, message, start, unzip_b
                 pass
         elif round(diff % 10.00) == 0 or current == total:
             percentage = current * 100 / total
-            speed = current / diff
-            time_to_completion = round((total - current) / speed) * 1000
-            estimated_total_time = time_to_completion
-            estimated_total_time = TimeFormatter(milliseconds=estimated_total_time)
+            if diff == 0:
+                speed = 0
+                estimated_total_time = "0 s"
+            else:
+                speed = current / diff
+                time_to_completion = round((total - current) / speed) * 1000
+                estimated_total_time = TimeFormatter(milliseconds=time_to_completion)
             progress = f'[{"".join(["⬢" for i in range(math.floor(percentage / 5))])}{"".join(["⬡" for i in range(20 - math.floor(percentage / 5))])}] \n{Messages.PROCESSING} : `{round(percentage, 2)}%`\n'
             tmp = (
                 progress
-                + f'`{humanbytes(current)} of {humanbytes(total)}`\n{Messages.SPEED} `{humanbytes(speed)}/s`\n{Messages.ETA} `{estimated_total_time if estimated_total_time != "" or percentage != "100" else "0 s"}`\n'
+                + f'`{humanbytes(current)} of {humanbytes(total)}`\n{Messages.SPEED} `{humanbytes(speed)}/s`\n{Messages.ETA} `{estimated_total_time if estimated_total_time != "" else "0 s"}`\n'
             )
             try:
                 await message.edit(
@@ -49,12 +53,17 @@ async def progress_for_pyrogram(current, total, ud_type, message, start, unzip_b
                 )
             except FloodWait as f:
                 await sleep(f.value)
-                await message.edit(
-                    text=Messages.PROGRESS_MSG.format(ud_type, tmp),
-                    reply_markup=Buttons.I_PREFER_STOP,
-                )
-            except:
+                try:
+                    await message.edit(
+                        text=Messages.PROGRESS_MSG.format(ud_type, tmp),
+                        reply_markup=Buttons.I_PREFER_STOP,
+                    )
+                except:
+                    pass
+            except MessageNotModified:
                 pass
+            except Exception as e:
+                LOGGER.warning(f"Progress update failed: {e}")
 
 
 async def progress_urls(current, total, ud_type, message, start):
@@ -62,22 +71,30 @@ async def progress_urls(current, total, ud_type, message, start):
     diff = now - start
     if round(diff % 10.00) == 0 or current == total:
         percentage = current * 100 / total
-        speed = current / diff
-        time_to_completion = round((total - current) / speed) * 1000
-        estimated_total_time = time_to_completion
-        estimated_total_time = TimeFormatter(milliseconds=estimated_total_time)
+        if diff == 0:
+            speed = 0
+            estimated_total_time = "0 s"
+        else:
+            speed = current / diff
+            time_to_completion = round((total - current) / speed) * 1000
+            estimated_total_time = TimeFormatter(milliseconds=time_to_completion)
         progress = f'[{"".join(["⬢" for i in range(math.floor(percentage / 5))])}{"".join(["⬡" for i in range(20 - math.floor(percentage / 5))])}] \n{Messages.PROCESSING} : `{round(percentage, 2)}%`\n'
         tmp = (
             progress
-            + f'{Messages.ETA} `{estimated_total_time if estimated_total_time != "" or percentage != "100" else "0 s"}`\n'
+            + f'{Messages.ETA} `{estimated_total_time if estimated_total_time != "" else "0 s"}`\n'
         )
         try:
             await message.edit(Messages.PROGRESS_MSG.format(ud_type, tmp))
         except FloodWait as f:
             await sleep(f.value)
-            await message.edit(Messages.PROGRESS_MSG.format(ud_type, tmp))
-        except:
+            try:
+                await message.edit(Messages.PROGRESS_MSG.format(ud_type, tmp))
+            except:
+                pass
+        except MessageNotModified:
             pass
+        except Exception as e:
+            LOGGER.warning(f"Progress URL update failed: {e}")
 
 
 def humanbytes(size):
