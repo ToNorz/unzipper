@@ -429,7 +429,7 @@ async def info_user(_, message: Message):
     except:
         await info_user_msg.edit(Messages.PROVIDE_UID)
         return
-    up_count = get_uploaded(user_id)
+    up_count = await get_uploaded(user_id)
     if up_count == "":
         up_count = Messages.UNABLE_FETCH
     await info_user_msg.edit(Messages.USER_INFO.format(user_id, up_count))
@@ -582,8 +582,8 @@ async def send_logs(user_id):
 
 
 def clear_logs():
-    with open("file.txt", "w") as f:
-        f.close()
+    with open("unzip-log.txt", "w") as f:
+        pass
 
 
 @unzipperbot.on_message(

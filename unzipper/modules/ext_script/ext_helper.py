@@ -115,7 +115,6 @@ async def extr_files(path, archive_path, password=None):
         shutil.rmtree(temp_path)
     elif archive_path.endswith((".tar.zst", ".zst", ".tzst")):
         LOGGER.info("zstd")
-        os.mkdir(path)
         result = await _extract_with_zstd(path, archive_path)
     else:
         LOGGER.info("normal archive")

@@ -137,7 +137,7 @@ async def unzipper_cb(unzip_bot: Client, query: CallbackQuery):
         return
 
     sent_files = 0
-    global log_msg
+    log_msg = None
 
     if query.data == "megoinhome":
         await query.edit_message_text(
