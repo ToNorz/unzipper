@@ -59,6 +59,7 @@ async def send_file(unzip_bot, c_id, doc_f, query, full_path, log_msg, split):
         except:
             pass
         return
+
     upmsg = None
     max_retries = 3
     for attempt in range(max_retries):
@@ -67,13 +68,25 @@ async def send_file(unzip_bot, c_id, doc_f, query, full_path, log_msg, split):
             fname = os.sep.join(os.path.abspath(doc_f).split(os.sep)[5:])
             fext = (pathlib.Path(os.path.abspath(doc_f)).suffix).casefold().replace(".", "")
             thumbornot = await thumb_exists(c_id)
+            thumb_image = (
+                Config.THUMB_LOCATION + "/" + str(c_id) + ".jpg" if thumbornot else None
+            )
             upmsg = await unzipperbot.send_message(
                 c_id, Messages.PROCESSING2, disable_notification=True
             )
+            progress_args = (
+                Messages.TRY_UP.format(fname),
+                upmsg,
+                time(),
+                unzip_bot,
+            )
+
+            uploaded = False
+
+            # Try uploading as media first, fallback to document
             if ul_mode == "media" and fext in extentions_list["audio"]:
-                metadata = await get_audio_metadata(doc_f)
-                if thumbornot:
-                    thumb_image = Config.THUMB_LOCATION + "/" + str(c_id) + ".jpg"
+                try:
+                    metadata = await get_audio_metadata(doc_f)
                     await unzip_bot.send_audio(
                         chat_id=c_id,
                         audio=doc_f,
@@ -84,32 +97,15 @@ async def send_file(unzip_bot, c_id, doc_f, query, full_path, log_msg, split):
                         thumb=thumb_image,
                         disable_notification=True,
                         progress=progress_for_pyrogram,
-                        progress_args=(
-                            Messages.TRY_UP.format(fname),
-                            upmsg,
-                            time(),
-                            unzip_bot,
-                        ),
+                        progress_args=progress_args,
                     )
-                else:
-                    await unzip_bot.send_audio(
-                        chat_id=c_id,
-                        audio=doc_f,
-                        caption=Messages.EXT_CAPTION.format(fname),
-                        duration=metadata["duration"],
-                        performer=metadata["performer"],
-                        title=metadata["title"],
-                        disable_notification=True,
-                        progress=progress_for_pyrogram,
-                        progress_args=(
-                            Messages.TRY_UP.format(fname),
-                            upmsg,
-                            time(),
-                            unzip_bot,
-                        ),
-                    )
+                    uploaded = True
+                except (FloodWait, FileNotFoundError):
+                    raise  # Let the outer handler deal with these
+                except Exception as e:
+                    LOGGER.warning(f"Audio upload failed for {doc_f}, falling back to document: {e}")
+
             elif ul_mode == "media" and fext in extentions_list["photo"]:
-                # impossible to use a thumb here :(
                 try:
                     await unzip_bot.send_photo(
                         chat_id=c_id,
@@ -117,211 +113,79 @@ async def send_file(unzip_bot, c_id, doc_f, query, full_path, log_msg, split):
                         caption=Messages.EXT_CAPTION.format(fname),
                         disable_notification=True,
                         progress=progress_for_pyrogram,
-                        progress_args=(
-                            Messages.TRY_UP.format(fname),
-                            upmsg,
-                            time(),
-                            unzip_bot,
-                        ),
+                        progress_args=progress_args,
                     )
-                except PhotoExtInvalid:
-                    if thumbornot:
-                        thumb_image = Config.THUMB_LOCATION + "/" + str(c_id) + ".jpg"
-                        await unzip_bot.send_document(
-                            chat_id=c_id,
-                            document=doc_f,
-                            thumb=thumb_image,
-                            caption=Messages.EXT_CAPTION.format(fname),
-                            force_document=True,
-                            disable_notification=True,
-                            progress=progress_for_pyrogram,
-                            progress_args=(
-                                Messages.TRY_UP.format(fname),
-                                upmsg,
-                                time(),
-                                unzip_bot,
-                            ),
-                        )
-                    else:
-                        await unzip_bot.send_document(
-                            chat_id=c_id,
-                            document=doc_f,
-                            caption=Messages.EXT_CAPTION.format(fname),
-                            force_document=True,
-                            disable_notification=True,
-                            progress=progress_for_pyrogram,
-                            progress_args=(
-                                Messages.TRY_UP.format(fname),
-                                upmsg,
-                                time(),
-                                unzip_bot,
-                            ),
-                        )
-                except PhotoSaveFileInvalid:
-                    if thumbornot:
-                        thumb_image = Config.THUMB_LOCATION + "/" + str(c_id) + ".jpg"
-                        await unzip_bot.send_document(
-                            chat_id=c_id,
-                            document=doc_f,
-                            thumb=thumb_image,
-                            caption=Messages.EXT_CAPTION.format(fname),
-                            force_document=True,
-                            disable_notification=True,
-                            progress=progress_for_pyrogram,
-                            progress_args=(
-                                Messages.TRY_UP.format(fname),
-                                upmsg,
-                                time(),
-                                unzip_bot,
-                            ),
-                        )
-                    else:
-                        await unzip_bot.send_document(
-                            chat_id=c_id,
-                            document=doc_f,
-                            caption=Messages.EXT_CAPTION.format(fname),
-                            force_document=True,
-                            disable_notification=True,
-                            progress=progress_for_pyrogram,
-                            progress_args=(
-                                Messages.TRY_UP.format(fname),
-                                upmsg,
-                                time(),
-                                unzip_bot,
-                            ),
-                        )
+                    uploaded = True
+                except (FloodWait, FileNotFoundError):
+                    raise
+                except Exception as e:
+                    LOGGER.warning(f"Photo upload failed for {doc_f}, falling back to document: {e}")
+
             elif ul_mode == "media" and fext in extentions_list["video"]:
-                vid_duration = await run_shell_cmds(
-                    f'ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "{doc_f}"'
-                )
-                if thumbornot:
-                    thumb_image = Config.THUMB_LOCATION + "/" + str(c_id) + ".jpg"
+                try:
+                    vid_duration = await run_shell_cmds(
+                        f'ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "{doc_f}"'
+                    )
+                    try:
+                        duration = int(float(vid_duration))
+                    except (ValueError, TypeError):
+                        duration = 0
+
+                    # Generate thumbnail if user doesn't have a custom one
+                    vid_thumb = thumb_image
+                    if not vid_thumb:
+                        thmb_pth = f"{Config.THUMB_LOCATION}/thumbnail_{os.path.basename(doc_f)}.jpg"
+                        try:
+                            if os.path.exists(thmb_pth):
+                                os.remove(thmb_pth)
+                            if duration > 0:
+                                midpoint = duration // 2
+                                await run_shell_cmds(
+                                    f'ffmpeg -ss {midpoint} -i "{doc_f}" -vf "scale=320:320:force_original_aspect_ratio=decrease" -vframes 1 "{thmb_pth}"'
+                                )
+                            if os.path.exists(thmb_pth):
+                                vid_thumb = thmb_pth
+                            else:
+                                vid_thumb = str(Config.BOT_THUMB)
+                        except Exception:
+                            vid_thumb = str(Config.BOT_THUMB)
+
                     await unzip_bot.send_video(
                         chat_id=c_id,
                         video=doc_f,
                         caption=Messages.EXT_CAPTION.format(fname),
-                        duration=int(float(vid_duration)),
-                        thumb=thumb_image,
+                        duration=duration,
+                        thumb=vid_thumb,
                         disable_notification=True,
                         progress=progress_for_pyrogram,
-                        progress_args=(
-                            Messages.TRY_UP.format(fname),
-                            upmsg,
-                            time(),
-                            unzip_bot,
-                        ),
+                        progress_args=progress_args,
                     )
-                else:
-                    thmb_pth = (
-                        f"{Config.THUMB_LOCATION}/thumbnail_{os.path.basename(doc_f)}.jpg"
-                    )
-                    if os.path.exists(thmb_pth):
-                        os.remove(thmb_pth)
-                    try:
-                        midpoint_seconds = int(float(vid_duration) / 2)
-                        midpoint_timedelta = timedelta(seconds=midpoint_seconds)
-                        midpoint_str = str(midpoint_timedelta)
+                    uploaded = True
 
-                        if "." not in midpoint_str:
-                            midpoint_str += ".00"
-                        else:
-                            midpoint_str = (
-                                midpoint_str.split(".")[0]
-                                + "."
-                                + midpoint_str.split(".")[1][:2]
-                            )
-
-                        await run_shell_cmds(
-                            f'ffmpeg -ss {midpoint_str} -i "{doc_f}" -vf "scale=320:320:force_original_aspect_ratio=decrease" -vframes 1 "{thmb_pth}"'
-                        )
-                    except Exception as e:
-                        LOGGER.warning(e)
-                        shutil.copy(Config.BOT_THUMB, thmb_pth)
-                    try:
-                        await unzip_bot.send_video(
-                            chat_id=c_id,
-                            video=doc_f,
-                            caption=Messages.EXT_CAPTION.format(fname),
-                            duration=int(vid_duration) if vid_duration.isnumeric() else 0,
-                            thumb=str(thmb_pth),
-                            disable_notification=True,
-                            progress=progress_for_pyrogram,
-                            progress_args=(
-                                Messages.TRY_UP.format(fname),
-                                upmsg,
-                                time(),
-                                unzip_bot,
-                            ),
-                        )
+                    # Clean up generated thumbnail
+                    if vid_thumb and vid_thumb != thumb_image and vid_thumb != str(Config.BOT_THUMB):
                         try:
-                            os.remove(thmb_pth)
+                            os.remove(vid_thumb)
                         except:
                             pass
-                    except:
-                        try:
-                            await unzip_bot.send_video(
-                                chat_id=c_id,
-                                video=doc_f,
-                                caption=Messages.EXT_CAPTION.format(fname),
-                                duration=0,
-                                thumb=str(Config.BOT_THUMB),
-                                disable_notification=True,
-                                progress=progress_for_pyrogram,
-                                progress_args=(
-                                    Messages.TRY_UP.format(fname),
-                                    upmsg,
-                                    time(),
-                                    unzip_bot,
-                                ),
-                            )
-                        except:
-                            await unzip_bot.send_document(
-                                chat_id=c_id,
-                                document=doc_f,
-                                caption=Messages.EXT_CAPTION.format(fname),
-                                force_document=True,
-                                disable_notification=True,
-                                progress=progress_for_pyrogram,
-                                progress_args=(
-                                    Messages.TRY_UP.format(fname),
-                                    upmsg,
-                                    time(),
-                                    unzip_bot,
-                                ),
-                            )
-            else:
-                if thumbornot:
-                    thumb_image = Config.THUMB_LOCATION + "/" + str(c_id) + ".jpg"
-                    await unzip_bot.send_document(
-                        chat_id=c_id,
-                        document=doc_f,
-                        thumb=thumb_image,
-                        caption=Messages.EXT_CAPTION.format(fname),
-                        force_document=True,
-                        disable_notification=True,
-                        progress=progress_for_pyrogram,
-                        progress_args=(
-                            Messages.TRY_UP.format(fname),
-                            upmsg,
-                            time(),
-                            unzip_bot,
-                        ),
-                    )
-                else:
-                    await unzip_bot.send_document(
-                        chat_id=c_id,
-                        document=doc_f,
-                        caption=Messages.EXT_CAPTION.format(fname),
-                        force_document=True,
-                        disable_notification=True,
-                        progress=progress_for_pyrogram,
-                        progress_args=(
-                            Messages.TRY_UP.format(fname),
-                            upmsg,
-                            time(),
-                            unzip_bot,
-                        ),
-                    )
+                except (FloodWait, FileNotFoundError):
+                    raise
+                except Exception as e:
+                    LOGGER.warning(f"Video upload failed for {doc_f}, falling back to document: {e}")
+
+            # Fallback: send as document (also used for non-media mode)
+            if not uploaded:
+                await unzip_bot.send_document(
+                    chat_id=c_id,
+                    document=doc_f,
+                    thumb=thumb_image,
+                    caption=Messages.EXT_CAPTION.format(fname),
+                    force_document=True,
+                    disable_notification=True,
+                    progress=progress_for_pyrogram,
+                    progress_args=progress_args,
+                )
+
             # Upload succeeded — clean up progress message and file
             try:
                 await upmsg.delete()
@@ -331,10 +195,12 @@ async def send_file(unzip_bot, c_id, doc_f, query, full_path, log_msg, split):
                 os.remove(doc_f)
             except:
                 pass
+            # Small delay to avoid triggering FloodWait on next file
+            await asyncio.sleep(1)
             return  # Success, exit the retry loop
+
         except FloodWait as f:
             LOGGER.warning(f"FloodWait for {f.value}s on attempt {attempt + 1} uploading {doc_f}")
-            # Clean up the progress message before retrying
             if upmsg:
                 try:
                     await upmsg.delete()

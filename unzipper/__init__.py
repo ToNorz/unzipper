@@ -17,7 +17,7 @@ unzipperbot = pyrogram.Client(
     api_hash=Config.API_HASH,
     plugins=plugins,
     sleep_threshold=10,
-    max_concurrent_transmissions=3,
+    max_concurrent_transmissions=10,
 )
 pyrogram.utils.MIN_CHAT_ID = -999999999999
 pyrogram.utils.MIN_CHANNEL_ID = -100999999999999

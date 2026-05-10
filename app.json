@@ -11,7 +11,7 @@
     ],
     "website": "https://UnxTar.dev/unzip",
     "repository": "https://github.com/UnxTar/unzip-bot",
-    "success_url": "https://t.me/UnxTarbots",
+    "success_url": "https://t.me/COUPORG",
     "env": {
         "APP_ID": {
             "description": "Your APP_ID from my.telegram.org",

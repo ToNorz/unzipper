@@ -100,7 +100,7 @@ This may take a while, go grab a coffee ☕️
 {}
 {}
 
-**Powered by @UnxTarbots**
+**Powered by @COUPORG**
     """
 
     PROCESSING = "**Processing…**"
@@ -121,7 +121,7 @@ This may take a while, go grab a coffee ☕️
 
     LOG_CHECKED = "Log channel checked"
 
-    BOT_RUNNING = "Bot is running now ! Join @UnxTarbots"
+    BOT_RUNNING = "Bot is running now ! Join @COUPORG"
 
     WRONG_LOG = """
 Error : the provided **LOGS_CHANNEL** (`{}`) is incorrect
@@ -235,7 +235,7 @@ Hi **{}** 👋, I'm **Unarchiver bot** 🥰
 I can extract any archive, with password or not, splitted, …
 Send **/commands** to learn more
 
-**Made with ❤️ by @UnxTarbots**
+**Made with ❤️ by @COUPORG**
 **/donate** if you can 🥺
     """
 
@@ -274,7 +274,7 @@ Send **/commands** to learn more
 • **Developer :** [UnxTar](https://github.com/UnxTar)
 
 **[Rate me ⭐](https://t.me/BotsArchive/2705)**
-Made with ❤️ by **@UnxTarbots**
+Made with ❤️ by **@COUPORG**
     """
 
     DONATE_TEXT = """
@@ -288,7 +288,7 @@ It helps out a ton, covers the costs (hosting, updating, … 👨‍💻)
 --How ?--
 • **[Paypal](https://www.paypal.me/8UnxTar)**
 • **[GitHub Sponsors](https://github.com/sponsors/UnxTar)**
-• **[Directly in Telegram](https://t.me/UnxTarbots/698)**
+• **[Directly in Telegram](https://t.me/COUPORG/698)**
 • **[BuyMeACoffee](https://www.buymeacoffee.com/UnxTar)**
 
 Thanks for your contribution 😊
@@ -557,7 +557,7 @@ Please send the new file name (**--INCLUDE THE FILE EXTENTION !--**)
     UPLOADED = """
 **Successfully uploaded ✅**
 
-**Join @UnxTarbots ❤️**
+**Join @COUPORG ❤️**
     """
 
     NO_FILE_LEFT = "There's no file left to upload"

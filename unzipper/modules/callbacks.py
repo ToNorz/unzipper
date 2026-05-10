@@ -5,6 +5,7 @@ import os
 import re
 import shutil
 
+import aiohttp
 import unzip_http
 
 from aiofiles import open as openfile
@@ -63,7 +64,8 @@ telegram_url_pattern = r"(?:http[s]?:\/\/)?(?:www\.)?t\.me\/([a-zA-Z0-9_]+)\/(\d
 
 async def download(url, path):
     try:
-        async with ClientSession() as session, session.get(
+        connector = aiohttp.TCPConnector(limit=0, force_close=False, enable_cleanup_closed=True)
+        async with ClientSession(connector=connector) as session, session.get(
             url, timeout=None, allow_redirects=True
         ) as resp, openfile(path, mode="wb") as file:
             async for chunk in resp.content.iter_chunked(Config.CHUNK_SIZE):
@@ -76,7 +78,8 @@ async def download(url, path):
 
 async def download_with_progress(url, path, message, unzip_bot):
     try:
-        async with ClientSession() as session, session.get(
+        connector = aiohttp.TCPConnector(limit=0, force_close=False, enable_cleanup_closed=True)
+        async with ClientSession(connector=connector, read_bufsize=Config.CHUNK_SIZE) as session, session.get(
             url, timeout=None, allow_redirects=True
         ) as resp:
             total_size = int(resp.headers.get("Content-Length", 0))
@@ -105,6 +108,8 @@ async def download_with_progress(url, path, message, unzip_bot):
 
     except Exception:
         LOGGER.error(Messages.ERR_DL.format(url))
+
+
 
 
 def get_zip_http(url):

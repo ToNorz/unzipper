@@ -9,14 +9,29 @@ from unzipper.helpers.database import del_cancel_task, get_cancel_task
 from unzipper.modules.bot_data import Buttons, Messages
 
 
+_last_progress_update = {}
+
+
 async def progress_for_pyrogram(current, total, ud_type, message, start, unzip_bot):
-    if message.from_user is not None and await get_cancel_task(message.from_user.id):
-        unzip_bot.stop_transmission()
-        await message.edit(text=Messages.DL_STOPPED)
-        await del_cancel_task(message.from_user.id)
-    else:
-        now = time.time()
-        diff = now - start
+    now = time.time()
+    diff = now - start
+
+    # Throttle cancel-task DB check to once per 3 seconds
+    msg_id = message.id
+    last_update = _last_progress_update.get(msg_id, 0)
+
+    if message.from_user is not None and (now - last_update) >= 3:
+        if await get_cancel_task(message.from_user.id):
+            _last_progress_update.pop(msg_id, None)
+            unzip_bot.stop_transmission()
+            await message.edit(text=Messages.DL_STOPPED)
+            await del_cancel_task(message.from_user.id)
+            return
+
+    # Update progress every 5 seconds or at completion
+    if current == total or (now - last_update) >= 5:
+        _last_progress_update[msg_id] = now
+
         if total == 0:
             tmp = Messages.UNKNOWN_SIZE
             try:
@@ -26,13 +41,9 @@ async def progress_for_pyrogram(current, total, ud_type, message, start, unzip_b
                 )
             except FloodWait as f:
                 await sleep(f.value)
-                await message.edit(
-                    text=Messages.PROGRESS_MSG.format(ud_type, tmp),
-                    reply_markup=Buttons.I_PREFER_STOP,
-                )
             except:
                 pass
-        elif round(diff % 10.00) == 0 or current == total:
+        else:
             percentage = current * 100 / total
             if diff == 0:
                 speed = 0
@@ -53,23 +64,27 @@ async def progress_for_pyrogram(current, total, ud_type, message, start, unzip_b
                 )
             except FloodWait as f:
                 await sleep(f.value)
-                try:
-                    await message.edit(
-                        text=Messages.PROGRESS_MSG.format(ud_type, tmp),
-                        reply_markup=Buttons.I_PREFER_STOP,
-                    )
-                except:
-                    pass
             except MessageNotModified:
                 pass
             except Exception as e:
                 LOGGER.warning(f"Progress update failed: {e}")
 
+        # Clean up tracking when transfer completes
+        if current == total:
+            _last_progress_update.pop(msg_id, None)
+
+
+_last_progress_url_update = {}
+
 
 async def progress_urls(current, total, ud_type, message, start):
     now = time.time()
     diff = now - start
-    if round(diff % 10.00) == 0 or current == total:
+    msg_id = message.id
+    last_update = _last_progress_url_update.get(msg_id, 0)
+
+    if current == total or (now - last_update) >= 5:
+        _last_progress_url_update[msg_id] = now
         percentage = current * 100 / total
         if diff == 0:
             speed = 0
@@ -87,14 +102,13 @@ async def progress_urls(current, total, ud_type, message, start):
             await message.edit(Messages.PROGRESS_MSG.format(ud_type, tmp))
         except FloodWait as f:
             await sleep(f.value)
-            try:
-                await message.edit(Messages.PROGRESS_MSG.format(ud_type, tmp))
-            except:
-                pass
         except MessageNotModified:
             pass
         except Exception as e:
             LOGGER.warning(f"Progress URL update failed: {e}")
+
+        if current == total:
+            _last_progress_url_update.pop(msg_id, None)
 
 
 def humanbytes(size):
