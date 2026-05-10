@@ -1,12 +1,9 @@
 # Copyright (c) 2022 - 2024 UnxTar
 import asyncio
-import concurrent.futures
 import os
 import re
 import shutil
 
-
-import unzip_http
 
 from aiofiles import open as openfile
 from aiohttp import ClientSession, ClientTimeout, InvalidURL, TCPConnector
@@ -128,15 +125,97 @@ async def download_with_progress(url, path, message, unzip_bot):
 
 
 
-def get_zip_http(url):
-    rzf = unzip_http.RemoteZipFile(url)
-    paths = rzf.namelist()
-    return rzf, paths
-
-
 async def async_generator(iterable):
     for item in iterable:
         yield item
+
+
+async def upload_all_extracted_files(
+    unzip_bot, query, user_id, chat_id, download_id, file_path, log_msg
+):
+    paths = await get_files(path=file_path)
+    LOGGER.info("upload_all paths : " + str(paths))
+    if not paths:
+        try:
+            shutil.rmtree(f"{Config.DOWNLOAD_LOCATION}/{download_id}")
+        except:
+            pass
+        await del_ongoing_task(user_id)
+        await query.message.edit(text=Messages.NO_FILE_LEFT, reply_markup=Buttons.RATE_ME)
+        return
+
+    sent_files = 0
+    await query.message.edit(Messages.SEND_ALL_FILES)
+    async_paths = async_generator(paths)
+    async for file in async_paths:
+        sent_files += 1
+        fsize = await get_size(file)
+        if fsize <= Config.TG_MAX_SIZE:
+            await send_file(
+                unzip_bot=unzip_bot,
+                c_id=chat_id,
+                doc_f=file,
+                query=query,
+                full_path=f"{Config.DOWNLOAD_LOCATION}/{download_id}",
+                log_msg=log_msg,
+                split=False,
+            )
+            continue
+
+        fname = file.split("/")[-1]
+        smessage = await unzip_bot.send_message(
+            chat_id=user_id, text=Messages.SPLITTING.format(fname)
+        )
+        splitteddir = f"{Config.DOWNLOAD_LOCATION}/splitted/{user_id}"
+        os.makedirs(splitteddir, exist_ok=True)
+        ooutput = f"{splitteddir}/{fname}"
+        splittedfiles = await split_files(file, ooutput, Config.TG_MAX_SIZE)
+        LOGGER.info(splittedfiles)
+        if not splittedfiles:
+            try:
+                shutil.rmtree(splitteddir)
+            except:
+                pass
+            await del_ongoing_task(user_id)
+            await smessage.edit(Messages.ERR_SPLIT)
+            return
+        await smessage.edit(Messages.SEND_ALL_PARTS.format(fname))
+        async_splittedfiles = async_generator(splittedfiles)
+        async for s_file in async_splittedfiles:
+            sent_files += 1
+            await send_file(
+                unzip_bot=unzip_bot,
+                c_id=chat_id,
+                doc_f=s_file,
+                query=query,
+                full_path=splitteddir,
+                log_msg=log_msg,
+                split=True,
+            )
+        try:
+            shutil.rmtree(splitteddir)
+        except:
+            pass
+        try:
+            await smessage.delete()
+        except:
+            pass
+
+    try:
+        await unzip_bot.send_message(
+            chat_id=user_id, text=Messages.UPLOADED, reply_markup=Buttons.RATE_ME
+        )
+        await query.message.edit(text=Messages.UPLOADED, reply_markup=Buttons.RATE_ME)
+    except:
+        pass
+    await log_msg.reply(Messages.HOW_MANY_UPLOADED.format(sent_files))
+    await update_uploaded(user_id, upload_count=sent_files)
+    await del_ongoing_task(user_id)
+    try:
+        shutil.rmtree(f"{Config.DOWNLOAD_LOCATION}/{download_id}")
+    except Exception as e:
+        await query.message.edit(Messages.ERROR_TXT.format(e))
+        LOGGER.error(e)
 
 
 # Callbacks
@@ -445,58 +524,15 @@ async def unzipper_cb(unzip_bot: Client, query: CallbackQuery):
             query, Messages.EXT_OK_TXT.format(extrtime), unzip_client=unzip_bot
         )
 
-        try:
-            i_e_buttons = await make_keyboard(
-                paths=paths,
-                user_id=user_id,
-                chat_id=query.message.chat.id,
-                unziphttp=False,
-            )
-            try:
-                await query.message.edit(
-                    Messages.SELECT_FILES, reply_markup=i_e_buttons
-                )
-            except ReplyMarkupTooLong:
-                empty_buttons = await make_keyboard_empty(
-                    user_id=user_id, chat_id=query.message.chat.id, unziphttp=False
-                )
-                await query.message.edit(
-                    Messages.UNABLE_GATHER_FILES,
-                    reply_markup=empty_buttons,
-                )
-        except:
-            try:
-                await query.message.delete()
-                i_e_buttons = await make_keyboard(
-                    paths=paths,
-                    user_id=user_id,
-                    chat_id=query.message.chat.id,
-                    unziphttp=False,
-                )
-                await unzip_bot.send_message(
-                    chat_id=query.message.chat.id,
-                    text=Messages.SELECT_FILES,
-                    reply_markup=i_e_buttons,
-                )
-            except:
-                try:
-                    await query.message.delete()
-                    empty_buttons = await make_keyboard_empty(
-                        user_id=user_id, chat_id=query.message.chat.id, unziphttp=False
-                    )
-                    await unzip_bot.send_message(
-                        chat_id=query.message.chat.id,
-                        text=Messages.UNABLE_GATHER_FILES,
-                        reply_markup=empty_buttons,
-                    )
-                except:
-                    await answer_query(
-                        query, Messages.EXT_FAILED_TXT, unzip_client=unzip_bot
-                    )
-                    shutil.rmtree(ext_files_dir)
-                    LOGGER.error(Messages.FATAL_ERROR)
-                    await del_ongoing_task(user_id)
-                    return
+        await upload_all_extracted_files(
+            unzip_bot=unzip_bot,
+            query=query,
+            user_id=user_id,
+            chat_id=query.message.chat.id,
+            download_id=user_id,
+            file_path=ext_files_dir,
+            log_msg=log_msg,
+        )
 
     elif query.data.startswith("extract_file"):
         user_id = query.from_user.id
@@ -604,76 +640,6 @@ async def unzipper_cb(unzip_bot: Client, query: CallbackQuery):
                             await answer_query(
                                 query, Messages.PROCESSING2, unzip_client=unzip_bot
                             )
-                            if (
-                                fext == "zip"
-                                and "accept-ranges" in metadata_headers
-                                and "content-length" in metadata_headers
-                            ):
-                                try:
-                                    loop = asyncio.get_event_loop()
-                                    with concurrent.futures.ThreadPoolExecutor() as pool:
-                                        rzf, paths = await loop.run_in_executor(
-                                            pool, get_zip_http, url
-                                        )
-                                    try:
-                                        i_e_buttons = await make_keyboard(
-                                            paths=paths,
-                                            user_id=user_id,
-                                            chat_id=query.message.chat.id,
-                                            unziphttp=True,
-                                            rzfile=rzf,
-                                        )
-                                        try:
-                                            await query.message.edit(
-                                                Messages.SELECT_FILES,
-                                                reply_markup=i_e_buttons,
-                                            )
-                                        except ReplyMarkupTooLong:
-                                            empty_buttons = await make_keyboard_empty(
-                                                user_id=user_id,
-                                                chat_id=query.message.chat.id,
-                                                unziphttp=True,
-                                                rzfile=rzf,
-                                            )
-                                            await query.message.edit(
-                                                Messages.UNABLE_GATHER_FILES,
-                                                reply_markup=empty_buttons,
-                                            )
-                                    except:
-                                        try:
-                                            await query.message.delete()
-                                            i_e_buttons = await make_keyboard(
-                                                paths=paths,
-                                                user_id=user_id,
-                                                chat_id=query.message.chat.id,
-                                                unziphttp=True,
-                                                rzfile=rzf,
-                                            )
-                                            await unzip_bot.send_message(
-                                                chat_id=query.message.chat.id,
-                                                text=Messages.SELECT_FILES,
-                                                reply_markup=i_e_buttons,
-                                            )
-                                        except:
-                                            try:
-                                                await query.message.delete()
-                                                empty_buttons = (
-                                                    await make_keyboard_empty(
-                                                        user_id=user_id,
-                                                        chat_id=query.message.chat.id,
-                                                        unziphttp=True,
-                                                        rzfile=rzf,
-                                                    )
-                                                )
-                                                await unzip_bot.send_message(
-                                                    chat_id=query.message.chat.id,
-                                                    text=Messages.UNABLE_GATHER_FILES,
-                                                    reply_markup=empty_buttons,
-                                                )
-                                            except:
-                                                pass
-                                except Exception as e:
-                                    LOGGER.error(Messages.UNZIP_HTTP.format(url, e))
                             try:
                                 dled = await download_with_progress(
                                     url, archive, query.message, unzip_bot
@@ -916,61 +882,15 @@ async def unzipper_cb(unzip_bot: Client, query: CallbackQuery):
                 query, Messages.EXT_OK_TXT.format(extrtime), unzip_client=unzip_bot
             )
 
-            try:
-                i_e_buttons = await make_keyboard(
-                    paths=paths,
-                    user_id=user_id,
-                    chat_id=query.message.chat.id,
-                    unziphttp=False,
-                )
-                try:
-                    await query.message.edit(
-                        Messages.SELECT_FILES, reply_markup=i_e_buttons
-                    )
-                except ReplyMarkupTooLong:
-                    empty_buttons = await make_keyboard_empty(
-                        user_id=user_id, chat_id=query.message.chat.id, unziphttp=False
-                    )
-                    await query.message.edit(
-                        Messages.UNABLE_GATHER_FILES,
-                        reply_markup=empty_buttons,
-                    )
-            except:
-                try:
-                    await query.message.delete()
-                    i_e_buttons = await make_keyboard(
-                        paths=paths,
-                        user_id=user_id,
-                        chat_id=query.message.chat.id,
-                        unziphttp=False,
-                    )
-                    await unzip_bot.send_message(
-                        chat_id=query.message.chat.id,
-                        text=Messages.SELECT_FILES,
-                        reply_markup=i_e_buttons,
-                    )
-                except:
-                    try:
-                        await query.message.delete()
-                        empty_buttons = await make_keyboard_empty(
-                            user_id=user_id,
-                            chat_id=query.message.chat.id,
-                            unziphttp=False,
-                        )
-                        await unzip_bot.send_message(
-                            chat_id=query.message.chat.id,
-                            text=Messages.UNABLE_GATHER_FILES,
-                            reply_markup=empty_buttons,
-                        )
-                    except:
-                        await answer_query(
-                            query, Messages.EXT_FAILED_TXT, unzip_client=unzip_bot
-                        )
-                        await archive_msg.reply(Messages.EXT_FAILED_TXT)
-                        shutil.rmtree(ext_files_dir)
-                        LOGGER.error(Messages.FATAL_ERROR)
-                        await del_ongoing_task(user_id)
-                        return
+            await upload_all_extracted_files(
+                unzip_bot=unzip_bot,
+                query=query,
+                user_id=user_id,
+                chat_id=query.message.chat.id,
+                download_id=user_id,
+                file_path=ext_files_dir,
+                log_msg=log_msg,
+            )
 
         except Exception as e:
             await del_ongoing_task(user_id)

@@ -56,6 +56,31 @@ def _zip_for_upload(source, destination):
         zip_file.write(source, arcname=os.path.basename(source))
 
 
+def _remux_video_for_upload(source, destination):
+    result = subprocess.run(
+        [
+            "ffmpeg",
+            "-y",
+            "-i",
+            source,
+            "-map",
+            "0:v:0",
+            "-map",
+            "0:a?",
+            "-c",
+            "copy",
+            "-movflags",
+            "+faststart",
+            destination,
+        ],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+    )
+    if result.returncode != 0:
+        raise RuntimeError(result.stderr or result.stdout)
+
+
 # Send file to a user
 async def send_file(unzip_bot, c_id, doc_f, query, full_path, log_msg, split):
     fsize = await get_size(doc_f)
@@ -214,28 +239,73 @@ async def send_file(unzip_bot, c_id, doc_f, query, full_path, log_msg, split):
                     raise
                 except Exception as e:
                     LOGGER.warning(f"Document upload also failed for {doc_f}: {e}")
-                    error_str = str(e)
-                    if "MEDIA_FILE_INVALID" not in error_str:
-                        raise  # Let the outer handler deal with it
-                    zipped_doc = f"{doc_f}.upload.zip"
-                    try:
-                        await asyncio.to_thread(_zip_for_upload, doc_f, zipped_doc)
-                        zipped_size = await get_size(zipped_doc)
-                        if zipped_size in (-1, 0) or zipped_size > Config.TG_MAX_SIZE:
-                            raise e
-                        await unzip_bot.send_document(
-                            chat_id=c_id,
-                            document=zipped_doc,
-                            caption=Messages.EXT_CAPTION.format(fname + ".zip"),
-                            disable_notification=True,
-                            progress=progress_for_pyrogram,
-                            progress_args=progress_args,
+                    if fext in extentions_list["video"]:
+                        remuxed_doc = os.path.join(
+                            os.path.dirname(doc_f),
+                            f"{pathlib.Path(doc_f).stem}.fixed.mp4",
                         )
-                    finally:
                         try:
-                            os.remove(zipped_doc)
-                        except:
-                            pass
+                            LOGGER.warning(
+                                "Retrying upload after remuxing video for %s", doc_f
+                            )
+                            await asyncio.to_thread(
+                                _remux_video_for_upload, doc_f, remuxed_doc
+                            )
+                            remuxed_size = await get_size(remuxed_doc)
+                            if (
+                                remuxed_size in (-1, 0)
+                                or remuxed_size > Config.TG_MAX_SIZE
+                            ):
+                                raise e
+                            await unzip_bot.send_document(
+                                chat_id=c_id,
+                                document=remuxed_doc,
+                                caption=Messages.EXT_CAPTION.format(
+                                    str(pathlib.Path(fname).with_suffix(".fixed.mp4"))
+                                ),
+                                disable_notification=True,
+                                progress=progress_for_pyrogram,
+                                progress_args=progress_args,
+                            )
+                            LOGGER.info("Uploaded remuxed video for %s", doc_f)
+                            uploaded = True
+                        except (FloodWait, FileNotFoundError):
+                            raise
+                        except Exception as remux_error:
+                            LOGGER.warning(
+                                "Remuxed upload failed for %s: %s",
+                                doc_f,
+                                remux_error,
+                            )
+                        finally:
+                            try:
+                                os.remove(remuxed_doc)
+                            except:
+                                pass
+                    if not uploaded:
+                        zipped_doc = f"{doc_f}.zip"
+                        try:
+                            LOGGER.warning("Retrying upload as zip for %s", doc_f)
+                            await asyncio.to_thread(_zip_for_upload, doc_f, zipped_doc)
+                            zipped_size = await get_size(zipped_doc)
+                            if (
+                                zipped_size in (-1, 0)
+                                or zipped_size > Config.TG_MAX_SIZE
+                            ):
+                                raise e
+                            await unzip_bot.send_document(
+                                chat_id=c_id,
+                                document=zipped_doc,
+                                caption=Messages.EXT_CAPTION.format(fname + ".zip"),
+                                disable_notification=True,
+                                progress=progress_for_pyrogram,
+                                progress_args=progress_args,
+                            )
+                        finally:
+                            try:
+                                os.remove(zipped_doc)
+                            except:
+                                pass
 
             # Upload succeeded — clean up progress message and file
             try:

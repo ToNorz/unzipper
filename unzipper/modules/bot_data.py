@@ -157,7 +157,7 @@ Select the extraction mode for that merged file 👀
     EXT_CAPTION = """
 `{}`
 
-Successfully extracted by @unzip_UnxTarbot 🥰
+Successfully extracted by @unzip_@UnxTarBot 🥰
     """
 
     REPORT_TEXT = """
