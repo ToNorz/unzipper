@@ -5,35 +5,21 @@ from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 class Messages:
     # here
 
-    HELP = "Help 📜"
-
-    ABOUT = "About 👀"
-
-    STATS_BTN = "Stats 📊"
-
-    DONATE = "Donate 💸"
-
-    REFRESH = "Refresh ♻️"
-
-    BACK = "Back 🏡"
-
-    CLEAN = "Clean my files 🚮"
-
-    AS_DOC = "As document 📁"
-
-    AS_MEDIA = "As media 📺"
-
-    MERGE_BTN = "Merge 🛠️"
-
-    CHECK = "Check 👀"
-
-    REPLACE = "Replace ⏭"
-
-    SAVE = "Save 💾"
-
-    DELETE = "Delete 🚮"
-
-    RATE = "Rate me ⭐"
+    HELP = "Help"
+    ABOUT = "About"
+    STATS_BTN = "Stats"
+    DONATE = "Donate"
+    REFRESH = "Refresh"
+    BACK = "Back"
+    CLEAN = "Clean my files"
+    AS_DOC = "As Document"
+    AS_MEDIA = "As Media"
+    MERGE_BTN = "Merge"
+    CHECK = "Check"
+    REPLACE = "Replace"
+    SAVE = "Save"
+    DELETE = "Delete"
+    RATE = "Rate me"
 
     # start.py
 
@@ -68,9 +54,9 @@ Don't go AFK next time 😉
     # database.py
 
     BANNED = """
-**Sorry you're banned 💀**
+**Sorry, you're banned 💀**
 
-Report this at @UnxTar_chat if you think this is a mistake, I may unban you
+If you think this is a mistake, please reach out to **@CoupChats** to appeal your ban.
     """
 
     NEW_USER_BAD = """
@@ -100,7 +86,7 @@ This may take a while, go grab a coffee ☕️
 {}
 {}
 
-**Powered by @COUPORG**
+**⚡️ Powered by @CoupOrg**
     """
 
     PROCESSING = "**Processing…**"
@@ -121,7 +107,7 @@ This may take a while, go grab a coffee ☕️
 
     LOG_CHECKED = "Log channel checked"
 
-    BOT_RUNNING = "Bot is running now ! Join @COUPORG"
+    BOT_RUNNING = "Bot is running now! Join @CoupOrg"
 
     WRONG_LOG = """
 Error : the provided **LOGS_CHANNEL** (`{}`) is incorrect
@@ -137,27 +123,25 @@ Sorry, the bot is currently full 🥺
     """
 
     CHOOSE_EXT_MODE = """
-Select the extraction mode for that {} 👀
+**Select the extraction mode for your {}**
 
 {} : **Normal mode**
-🔐 : **Password protected**
-🖼️ : **Change the thumbnail**
-✏ : **Change the thumbnail and rename the file**
-❌ : **Cancel your task**
+🔒 : **Password protected**
+⛔ : **Cancel**
     """
 
     CHOOSE_EXT_MODE_MERGE = """
-Select the extraction mode for that merged file 👀
+**Select the extraction mode for your merged file**
 
-🗂️ : **Normal mode**
-🔐 : **Password protected**
-❌ : **Cancel your task**
+📁 : **Normal mode**
+🔒 : **Password protected**
+⛔ : **Cancel**
     """
 
     EXT_CAPTION = """
 `{}`
 
-Successfully extracted by @unzip_@UnxTarBot 🥰
+**✨ Extracted via @UnxTarBot**
     """
 
     REPORT_TEXT = """
@@ -178,19 +162,17 @@ have been saved from the URL
     """
 
     EXT_FAILED_TXT = """
-**Extraction failed 😕**
+**❌ Extraction Failed**
 
-**What to do ?**
+**Troubleshooting Steps:**
+ • Ensure the archive is fully downloaded and not corrupted.
+ • Verify you selected the correct extraction mode.
+ • Check your password (remember, it's case-sensitive!).
+ • The archive format might be unsupported or deeply nested.
 
-   • Please make sure archive isn't corrupted
-   • Please make sure that you selected the right mode !
-   • Also check if you sent the right password (it's case sensitive)
-   • Maybe your archive format isn't supported yet 😔
+**⚠️ IMPORTANT:** Send **/clean** to reset your session before trying again!
 
-
-**⚠ IN ALL CASES ⚠**, please send **/clean**, else you can't send any other task 🙂🔫
-
-Please report this at @UnxTar_chat if you think this is a serious error
+Need help? Contact our support team at **@CoupChats**.
     """
 
     HOW_MANY_UPLOADED = "`{}` file(s) have been extracted from that archive"
@@ -230,13 +212,14 @@ Use **/merge** to start one
     ACTUAL_THUMB = "Your actual thumbnail"
 
     START_TEXT = """
-Hi **{}** 👋, I'm **Unarchiver bot** 🥰
+Hi **{}** 👋, welcome to **@UnxTarBot**!
 
-I can extract any archive, with password or not, splitted, …
-Send **/commands** to learn more
+I'm a powerful cloud unarchiver. Send me any file or direct download link, and I'll extract its contents for you directly here in Telegram. I handle passwords, large split archives, and almost any format you throw at me!
 
-**Made with ❤️ by @COUPORG**
-**/donate** if you can 🥺
+Type **/commands** to see what else I can do.
+
+**🚀 Developed by @CoupOrg**
+**💬 Support:** @CoupChats
     """
 
     HELP_TXT = """
@@ -260,41 +243,36 @@ Send **/commands** to learn more
     Visit UnxTar.dev/unzip#help
 
 
-**• I wanna have help 🥺**
-
-    PM me at **@UnxTar** or join the chat **@UnxTar_chat**
+**• Need Assistance?**
+    Join our community or request help at **@CoupChats**.
     """
 
     ABOUT_TXT = """
-**About Unarchiver bot [v6.3.5]**
+**About @UnxTarBot**
 
-• **Language :** [Python 3.12.4](https://www.python.org/)
-• **Framework :** [Pyrogram 2.0.106](https://pyrogram.org/)
-• **Source code :** [UnxTar/unzip-bot](https://github.com/UnxTar/unzip-bot)
-• **Developer :** [UnxTar](https://github.com/UnxTar)
+• **Engine:** Python & Pyrogram
+• **Specialty:** High-speed cloud archive extraction
+• **Network:** Powered by **@CoupOrg**
+• **Community:** Join **@CoupChats**
 
-**[Rate me ⭐](https://t.me/CoupOrg)**
-Made with ❤️ by **@COUPORG**
+**[✨ Check out our Network](https://t.me/CoupOrg)**
     """
 
     DONATE_TEXT = """
-I'm going to be honest : **this bot costs me money**…
-Nothing's free on this world, however I try to keep this bot for free for as many people as possible
-I don't like to put restrictions, nor getting your PM's flooded with ads…
+I'm going to be honest: **this bot costs me money**...
+Nothing's free in this world, however I try to keep this bot free for as many people as possible.
+I don't like to put restrictions, nor flood your PMs with ads.
 
-So if you can, donate :)
-It helps out a ton, covers the costs (hosting, updating, … 👨‍💻)
+So if you can, please donate!
+It helps out a ton and covers the costs (hosting, updates, etc. 👨‍💻)
 
---How ?--
-• **[Paypal](https://www.paypal.me/8UnxTar)**
-• **[GitHub Sponsors](https://github.com/sponsors/UnxTar)**
-• **[Directly in Telegram](https://t.me/COUPORG/698)**
-• **[BuyMeACoffee](https://www.buymeacoffee.com/UnxTar)**
+--**How?**--
+• **[Directly in Telegram](https://t.me/CoupOrg)**
 
 Thanks for your contribution 😊
 
---Side note :--
-Donation doesn't count as a VIP subscription. Check **/vip** for more info
+--*Side note:*--
+Donation doesn't count as a VIP subscription. Check **/vip** for more info.
     """
 
     VIP_INFO = """
@@ -316,16 +294,14 @@ Here's how : Become a VIP user and benefit from extra perks !
 - `1$/month`
 - `10$/year`
 
-**How to become a VIP ?**
+**How to become a VIP?**
 1) Send **/pay** to the bot
 2) Choose your subscription
-3) Send a screenshot of your payment to **@UnxTar**
-4) Enjoy your VIP perks !
+3) Send a screenshot of your payment to **@CoupChats**
+4) Enjoy your VIP perks!
 
-**What happens when my subscription ends ?**
-If you choosed GitHub Sponsors, Telegram Donate or BuyMeACoffee, you will be automatically renewed until you cancel it
-If you choosed PayPal, you will have to redo the 4 above steps
-You will be notified few days before you subscription ends so you can check if you want to renew it or not
+**What happens when my subscription ends?**
+You will be notified a few days before your subscription ends so you can check if you want to renew it or not.
 
 **I wanna cancel my subscription**
 Just send **/stoppay** and follow the instructions according to the platform you selected
@@ -853,9 +829,9 @@ Saved thumbnail of [user {}](tg://user?id={})
 
     # ext_helper.py
 
-    UP_ALL = "Upload all 📤"
+    UP_ALL = "Upload all"
 
-    CANCEL_IT = "❌ Cancel"
+    CANCEL_IT = "Cancel"
 
     # up_helper.py
 
@@ -911,50 +887,40 @@ class Buttons:
     CHOOSE_E_F__BTNS = InlineKeyboardMarkup(
         [
             [
-                InlineKeyboardButton("🗂️", callback_data="extract_file|tg_file|no_pass"),
+                InlineKeyboardButton("Normal Mode", callback_data="extract_file|tg_file|no_pass"),
                 InlineKeyboardButton(
-                    "🔐", callback_data="extract_file|tg_file|with_pass"
+                    "With Password", callback_data="extract_file|tg_file|with_pass"
                 ),
             ],
-            [
-                InlineKeyboardButton("🖼️", callback_data="extract_file|tg_file|thumb"),
-                InlineKeyboardButton(
-                    "✏", callback_data="extract_file|tg_file|thumbrename"
-                ),
-            ],
-            [InlineKeyboardButton("❌", callback_data="cancel_dis")],
+            [InlineKeyboardButton("Cancel", callback_data="cancel_dis")],
         ]
     )
 
     CHOOSE_E_F_M__BTNS = InlineKeyboardMarkup(
         [
             [
-                InlineKeyboardButton("🗂️", callback_data="merged|no_pass"),
-                InlineKeyboardButton("🔐", callback_data="merged|with_pass"),
+                InlineKeyboardButton("Normal Mode", callback_data="merged|no_pass"),
+                InlineKeyboardButton("With Password", callback_data="merged|with_pass"),
             ],
-            [InlineKeyboardButton("❌", callback_data="cancel_dis")],
+            [InlineKeyboardButton("Cancel", callback_data="cancel_dis")],
         ]
     )
 
     CHOOSE_E_U__BTNS = InlineKeyboardMarkup(
         [
             [
-                InlineKeyboardButton("🔗", callback_data="extract_file|url|no_pass"),
-                InlineKeyboardButton("🔐", callback_data="extract_file|url|with_pass"),
+                InlineKeyboardButton("Normal Mode", callback_data="extract_file|url|no_pass"),
+                InlineKeyboardButton("With Password", callback_data="extract_file|url|with_pass"),
             ],
-            [
-                InlineKeyboardButton("🖼️", callback_data="extract_file|url|thumb"),
-                InlineKeyboardButton("✏", callback_data="extract_file|url|thumbrename"),
-            ],
-            [InlineKeyboardButton("❌", callback_data="cancel_dis")],
+            [InlineKeyboardButton("Cancel", callback_data="cancel_dis")],
         ]
     )
 
     RENAME = InlineKeyboardMarkup(
         [
             [
-                InlineKeyboardButton("✏", callback_data="renameit"),
-                InlineKeyboardButton("🙅‍♂️", callback_data="norename"),
+                InlineKeyboardButton("Rename", callback_data="renameit"),
+                InlineKeyboardButton("Keep Original", callback_data="norename"),
             ]
         ]
     )

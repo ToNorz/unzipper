@@ -21,7 +21,6 @@ from config import Config
 from unzipper import boottime, LOGGER, unzipperbot
 from unzipper.helpers.database import (
     add_banned_user,
-    add_merge_task,
     add_user,
     check_user,
     count_banned_users,
@@ -31,15 +30,13 @@ from unzipper.helpers.database import (
     del_ongoing_task,
     del_user,
     get_maintenance,
-    get_merge_task,
     get_ongoing_tasks,
     get_upload_mode,
     get_uploaded,
     get_users_list,
     set_maintenance,
 )
-from unzipper.helpers.unzip_help import humanbytes, timeformat_sec
-from unzipper.modules.ext_script.custom_thumbnail import add_thumb, del_thumb
+from unzipper.helpers.unzip_help import humanbytes, timeformat_sec, send_ui_message, edit_ui_message
 from unzipper.modules.ext_script.ext_helper import get_files
 
 # Regex for urls
@@ -112,10 +109,10 @@ async def _(_, message: Message):
 @unzipperbot.on_message(filters.command("start"))
 async def start_bot(_, message: Message):
     try:
-        await message.reply_text(
+        await send_ui_message(
+            message,
             text=Messages.START_TEXT.format(message.from_user.mention),
-            reply_markup=Buttons.START_BUTTON,
-            disable_web_page_preview=True,
+            reply_markup=Buttons.START_BUTTON
         )
     except FloodWait as f:
         await sleep(f.value)
@@ -125,7 +122,7 @@ async def start_bot(_, message: Message):
 @unzipperbot.on_message(filters.private & filters.command("clean"))
 async def clean_my_files(_, message: Message):
     try:
-        await message.reply_text(text=Messages.CLEAN_TXT, reply_markup=Buttons.CLN_BTNS)
+        await send_ui_message(message, text=Messages.CLEAN_TXT, reply_markup=Buttons.CLN_BTNS)
     except FloodWait as f:
         await sleep(f.value)
         await clean_my_files(_, message)
@@ -134,7 +131,8 @@ async def clean_my_files(_, message: Message):
 @unzipperbot.on_message(filters.command("help"))
 async def help_me(_, message: Message):
     try:
-        await message.reply_text(
+        await send_ui_message(
+            message,
             text=Messages.HELP_TXT, reply_markup=Buttons.ME_GOIN_HOME
         )
     except FloodWait as f:
@@ -145,10 +143,10 @@ async def help_me(_, message: Message):
 @unzipperbot.on_message(filters.command("about"))
 async def about_me(_, message: Message):
     try:
-        await message.reply_text(
+        await send_ui_message(
+            message,
             text=Messages.ABOUT_TXT,
-            reply_markup=Buttons.ME_GOIN_HOME,
-            disable_web_page_preview=True,
+            reply_markup=Buttons.ME_GOIN_HOME
         )
     except FloodWait as f:
         await sleep(f.value)
@@ -158,7 +156,7 @@ async def about_me(_, message: Message):
 @unzipperbot.on_message(filters.command("privacy"))
 async def privacy_text(_, message: Message):
     try:
-        await message.reply_text(text=Messages.PRIVACY)
+        await send_ui_message(message, text=Messages.PRIVACY)
     except FloodWait as f:
         await sleep(f.value)
         await privacy_text(_, message)
@@ -174,32 +172,33 @@ async def extract_archive(_, message: Message):
     try:
         if message.chat.type != enums.ChatType.PRIVATE:
             return
-        unzip_msg = await message.reply(
-            Messages.PROCESSING2, reply_to_message_id=message.id
+        unzip_msg = await send_ui_message(
+            message,
+            text=Messages.PROCESSING2,
+            reply_to_message_id=message.id
         )
         user_id = message.from_user.id
         download_path = f"{Config.DOWNLOAD_LOCATION}/{user_id}"
         if os.path.isdir(download_path):
-            await unzip_msg.edit(Messages.PROCESS_RUNNING)
-            return
-        if await get_merge_task(user_id):
-            await unzip_msg.delete()
+            await edit_ui_message(unzip_msg, Messages.PROCESS_RUNNING)
             return
         if message.text and (re.match(https_url_regex, message.text)):
-            await unzip_msg.edit(
-                text=Messages.CHOOSE_EXT_MODE.format("URL", "🔗"),
+            await edit_ui_message(
+                unzip_msg,
+                text=Messages.CHOOSE_EXT_MODE.format("URL", "🌐"),
                 reply_markup=Buttons.CHOOSE_E_U__BTNS,
             )
         elif message.document:
             if sufficient_disk_space(message.document.file_size):
-                await unzip_msg.edit(
-                    text=Messages.CHOOSE_EXT_MODE.format("file", "🗂️"),
+                await edit_ui_message(
+                    unzip_msg,
+                    text=Messages.CHOOSE_EXT_MODE.format("file", "📁"),
                     reply_markup=Buttons.CHOOSE_E_F__BTNS,
                 )
             else:
-                await unzip_msg.edit(Messages.NO_SPACE)
+                await edit_ui_message(unzip_msg, Messages.NO_SPACE)
         else:
-            await unzip_msg.edit(Messages.UNVALID)
+            await edit_ui_message(unzip_msg, Messages.UNVALID)
     except FloodWait as f:
         await sleep(f.value)
         await extract_archive(_, message)
@@ -217,30 +216,15 @@ async def cancel_task_by_user(_, message):
     await message.reply(Messages.CANCELLED)
 
 
-@unzipperbot.on_message(filters.private & filters.command("merge"))
-async def merging(_, message: Message):
-    try:
-        merge_msg = await message.reply(Messages.MERGE)
-        await add_merge_task(message.from_user.id, merge_msg.id)
-    except FloodWait as f:
-        await sleep(f.value)
-        await merging(_, message)
 
-
-@unzipperbot.on_message(filters.private & filters.command("done"))
-async def done_merge(_, message: Message):
-    try:
-        await message.reply(Messages.DONE, reply_markup=Buttons.MERGE_THEM_ALL)
-    except FloodWait as f:
-        await sleep(f.value)
-        await done_merge(_, message)
 
 
 @unzipperbot.on_message(filters.private & filters.command("mode"))
 async def set_mode_for_user(_, message: Message):
     try:
         upload_mode = await get_upload_mode(message.from_user.id)
-        await message.reply(
+        await send_ui_message(
+            message,
             text=Messages.SELECT_UPLOAD_MODE_TXT.format(upload_mode),
             reply_markup=Buttons.SET_UPLOAD_MODE_BUTTONS,
         )
@@ -504,33 +488,7 @@ async def info_self(_, message: Message):
     await message.reply(f"`{self_infos}`")
 
 
-@unzipperbot.on_message(
-    filters.private & filters.command("getthumbs") & filters.user(Config.BOT_OWNER)
-)
-async def get_all_thumbs(_, message: Message):
-    paths = await get_files(path=Config.THUMB_LOCATION)
-    if not paths:
-        await message.reply(Messages.NO_THUMBS)
-    for doc_f in paths:
-        try:
-            await unzipperbot.send_document(
-                chat_id=message.chat.id,
-                document=doc_f,
-                file_name=doc_f.split("/")[-1],
-                reply_to_message_id=message.id,
-                caption=Messages.EXT_CAPTION.format(doc_f),
-            )
-        except FloodWait as f:
-            await sleep(f.value)
-            await unzipperbot.send_document(
-                chat_id=message.chat.id,
-                document=doc_f,
-                file_name=doc_f.split("/")[-1],
-                reply_to_message_id=message.id,
-                caption=Messages.EXT_CAPTION.format(doc_f),
-            )
-        except RPCError as e:
-            LOGGER.error(e)
+
 
 
 @unzipperbot.on_message(
@@ -561,14 +519,7 @@ async def maintenance_mode(_, message: Message):
     await message.reply(Messages.MAINTENANCE_DONE.format(newstate))
 
 
-@unzipperbot.on_message(filters.private & filters.command("addthumb"))
-async def thumb_add(_, message: Message):
-    await add_thumb(unzipperbot, message)
 
-
-@unzipperbot.on_message(filters.private & filters.command("delthumb"))
-async def thumb_del(_, message: Message):
-    await del_thumb(message)
 
 
 @unzipperbot.on_message(

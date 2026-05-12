@@ -12,6 +12,54 @@ from unzipper.modules.bot_data import Buttons, Messages
 _last_progress_update = {}
 
 
+import os
+from config import Config
+
+async def send_ui_message(message, text, reply_markup=None, reply_to_message_id=None):
+    if Config.BOT_THUMB_FILE_ID:
+        try:
+            return await message.reply_photo(
+                photo=Config.BOT_THUMB_FILE_ID,
+                caption=text,
+                reply_markup=reply_markup,
+                reply_to_message_id=reply_to_message_id
+            )
+        except Exception:
+            pass
+
+    if os.path.exists(Config.BOT_THUMB):
+        try:
+            msg = await message.reply_photo(
+                photo=Config.BOT_THUMB,
+                caption=text,
+                reply_markup=reply_markup,
+                reply_to_message_id=reply_to_message_id
+            )
+            Config.BOT_THUMB_FILE_ID = msg.photo.file_id
+            return msg
+        except Exception:
+            pass
+
+    return await message.reply_text(
+        text=text,
+        reply_markup=reply_markup,
+        reply_to_message_id=reply_to_message_id
+    )
+
+async def edit_ui_message(message, text, reply_markup=None):
+    if message.photo or message.video or message.document:
+        try:
+            return await message.edit_caption(
+                caption=text,
+                reply_markup=reply_markup
+            )
+        except Exception:
+            pass
+    return await message.edit_text(
+        text=text,
+        reply_markup=reply_markup
+    )
+
 class TransferCancelled(Exception):
     pass
 

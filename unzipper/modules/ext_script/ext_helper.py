@@ -27,9 +27,9 @@ async def cleanup_macos_artifacts(extraction_path):
         for name in files:
             if name == ".DS_Store":
                 os.remove(os.path.join(root, name))
-        for name in dirs:
-            if name == "__MACOSX":
-                shutil.rmtree(os.path.join(root, name))
+        if "__MACOSX" in dirs:
+            shutil.rmtree(os.path.join(root, "__MACOSX"))
+            dirs.remove("__MACOSX")
 
 
 def __run_cmds_unzipper(command):
@@ -133,13 +133,7 @@ async def split_files(iinput, ooutput, size):
     return await get_files(spdir)
 
 
-# Merge files
-async def merge_files(iinput, ooutput, password=None):
-    if password:
-        command = f'7z x -o"{ooutput}" -p"{password}" "{iinput}" -y'
-    else:
-        command = f'7z x -o"{ooutput}" "{iinput}" -y'
-    return await run_cmds_on_cr(__run_cmds_unzipper, cmd=command)
+
 
 
 # Make keyboard

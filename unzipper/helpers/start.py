@@ -10,8 +10,6 @@ from time import time
 
 from .database import (
     clear_cancel_tasks,
-    clear_merge_tasks,
-    get_thumb_users,
     set_boot,
     get_boot,
     set_old_boot,
@@ -43,31 +41,7 @@ def check_logs():
         return False
 
 
-def dl_thumbs():
-    loop = asyncio.get_event_loop()
-    coroutine = get_thumb_users()
-    thumbs = loop.run_until_complete(coroutine)
-    i = 0
-    maxthumbs = len(thumbs)
-    LOGGER.info(Messages.DL_THUMBS.format(maxthumbs))
-    for thumb in thumbs:
-        if thumb.get("url") is None and thumb.get("file_id") is not None:
-            unzipperbot.download_media(
-                message=thumb.get("file_id"),
-                file_name=(
-                    Config.THUMB_LOCATION + "/" + str(thumb.get("_id")) + ".jpg"
-                ),
-            )
-        elif thumb.get("url") is not None and thumb.get("file_id") is None:
-            loop2 = asyncio.get_event_loop()
-            coroutine2 = download(
-                thumb.get("url"),
-                (Config.THUMB_LOCATION + "/" + str(thumb.get("_id")) + ".jpg"),
-            )
-            loop2.run_until_complete(coroutine2)
-        i += 1
-        if i % 10 == 0 or i == maxthumbs:
-            LOGGER.info(Messages.DOWNLOADED_THUMBS.format(i, maxthumbs))
+
 
 
 def set_boot_time():
@@ -99,7 +73,6 @@ async def check_boot():
 
 async def warn_users():
     await clear_cancel_tasks()
-    await clear_merge_tasks()
     if await count_ongoing_tasks() > 0:
         tasks = await get_ongoing_tasks()
         for task in tasks:
@@ -151,19 +124,6 @@ async def remove_expired_tasks(firststart=False):
                             user_id,
                             Messages.TASK_EXPIRED.format(
                                 Config.MAX_TASK_DURATION_EXTRACT // 60
-                            ),
-                        )
-                elif task_type == "merge":
-                    if time_gap > Config.MAX_TASK_DURATION_MERGE:
-                        try:
-                            await del_ongoing_task(user_id)
-                            shutil.rmtree(f"{Config.DOWNLOAD_LOCATION}/{user_id}")
-                        except:
-                            pass
-                        await unzipperbot.send_message(
-                            user_id,
-                            Messages.TASK_EXPIRED.format(
-                                Config.MAX_TASK_DURATION_MERGE // 60
                             ),
                         )
 

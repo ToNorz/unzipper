@@ -29,6 +29,7 @@ class Config:
         os.environ.get("MAX_CONCURRENT_TRANSMISSIONS", 20)
     )
     BOT_THUMB = f"{os.path.dirname(__file__)}/bot_thumb.jpg"
+    BOT_THUMB_FILE_ID = None
     MAX_CONCURRENT_TASKS = 75
     MAX_TASK_DURATION_EXTRACT = 120 * 60  # 2 hours (in seconds)
     MAX_TASK_DURATION_MERGE = 240 * 60  # 4 hours (in seconds)

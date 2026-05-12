@@ -11,7 +11,6 @@ from config import Config
 from . import LOGGER, unzipperbot
 from .helpers.start import (
     check_logs,
-    dl_thumbs,
     set_boot_time,
     start_cron_jobs,
     removal,
@@ -93,7 +92,6 @@ if __name__ == "__main__":
             chat_id=Config.LOGS_CHANNEL, text=Messages.START_TXT.format(starttime)
         )
         set_boot_time()
-        dl_thumbs()
         LOGGER.info(Messages.CHECK_LOG)
         if check_logs():
             LOGGER.info(Messages.LOG_CHECKED)

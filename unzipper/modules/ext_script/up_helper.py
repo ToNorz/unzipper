@@ -134,95 +134,106 @@ async def send_file(unzip_bot, c_id, doc_f, query, full_path, log_msg, split):
             uploaded = False
 
             # Try uploading as media first, fallback to document
-            if ul_mode == "media" and fext in extentions_list["audio"]:
-                try:
-                    metadata = await get_audio_metadata(doc_f)
-                    await unzip_bot.send_audio(
-                        chat_id=c_id,
-                        audio=doc_f,
-                        caption=Messages.EXT_CAPTION.format(fname),
-                        duration=metadata["duration"],
-                        performer=metadata["performer"],
-                        title=metadata["title"],
-                        thumb=thumb_image,
-                        disable_notification=True,
-                        progress=progress_for_pyrogram,
-                        progress_args=progress_args,
-                    )
-                    uploaded = True
-                except (FloodWait, FileNotFoundError, TransferCancelled):
-                    raise  # Let the outer handler deal with these
-                except Exception as e:
-                    LOGGER.warning(f"Audio upload failed for {doc_f}, falling back to document: {e}")
-
-            elif ul_mode == "media" and fext in extentions_list["photo"]:
-                try:
-                    await unzip_bot.send_photo(
-                        chat_id=c_id,
-                        photo=doc_f,
-                        caption=Messages.EXT_CAPTION.format(fname),
-                        disable_notification=True,
-                        progress=progress_for_pyrogram,
-                        progress_args=progress_args,
-                    )
-                    uploaded = True
-                except (FloodWait, FileNotFoundError, TransferCancelled):
-                    raise
-                except Exception as e:
-                    LOGGER.warning(f"Photo upload failed for {doc_f}, falling back to document: {e}")
-
-            elif ul_mode == "media" and fext in extentions_list["video"]:
-                try:
-                    vid_duration = await run_shell_cmds(
-                        f'ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "{doc_f}"'
-                    )
-                    try:
-                        duration = int(float(vid_duration))
-                    except (ValueError, TypeError):
-                        duration = 0
-
-                    # Generate thumbnail if user doesn't have a custom one
-                    vid_thumb = thumb_image
-                    if not vid_thumb:
-                        thmb_pth = f"{Config.THUMB_LOCATION}/thumbnail_{os.path.basename(doc_f)}.jpg"
+            if ul_mode == "media":
+                media_types = ["photo", "audio", "video"]
+                if fext in extentions_list["audio"]:
+                    media_types = ["audio", "photo", "video"]
+                elif fext in extentions_list["video"]:
+                    media_types = ["video", "photo", "audio"]
+                
+                for m_type in media_types:
+                    if uploaded:
+                        break
+                    
+                    if m_type == "photo":
                         try:
-                            if os.path.exists(thmb_pth):
-                                os.remove(thmb_pth)
-                            if duration > 0:
-                                midpoint = duration // 2
-                                await run_shell_cmds(
-                                    f'ffmpeg -ss {midpoint} -i "{doc_f}" -vf "scale=320:320:force_original_aspect_ratio=decrease" -frames:v 1 -update 1 "{thmb_pth}"'
-                                )
-                            # Validate the thumbnail is real (not empty/corrupted)
-                            if os.path.exists(thmb_pth) and os.path.getsize(thmb_pth) > 0:
-                                vid_thumb = thmb_pth
-                            else:
-                                vid_thumb = str(Config.BOT_THUMB)
-                        except Exception:
-                            vid_thumb = str(Config.BOT_THUMB)
+                            await unzip_bot.send_photo(
+                                chat_id=c_id,
+                                photo=doc_f,
+                                caption=Messages.EXT_CAPTION.format(fname),
+                                disable_notification=True,
+                                progress=progress_for_pyrogram,
+                                progress_args=progress_args,
+                            )
+                            uploaded = True
+                        except (FloodWait, FileNotFoundError, TransferCancelled):
+                            raise
+                        except Exception as e:
+                            LOGGER.warning(f"Photo upload failed for {doc_f}: {e}")
 
-                    await unzip_bot.send_video(
-                        chat_id=c_id,
-                        video=doc_f,
-                        caption=Messages.EXT_CAPTION.format(fname),
-                        duration=duration,
-                        thumb=vid_thumb,
-                        disable_notification=True,
-                        progress=progress_for_pyrogram,
-                        progress_args=progress_args,
-                    )
-                    uploaded = True
-
-                    # Clean up generated thumbnail
-                    if vid_thumb and vid_thumb != thumb_image and vid_thumb != str(Config.BOT_THUMB):
+                    elif m_type == "audio":
                         try:
-                            os.remove(vid_thumb)
-                        except:
-                            pass
-                except (FloodWait, FileNotFoundError, TransferCancelled):
-                    raise
-                except Exception as e:
-                    LOGGER.warning(f"Video upload failed for {doc_f}, falling back to document: {e}")
+                            metadata = await get_audio_metadata(doc_f)
+                            await unzip_bot.send_audio(
+                                chat_id=c_id,
+                                audio=doc_f,
+                                caption=Messages.EXT_CAPTION.format(fname),
+                                duration=metadata["duration"],
+                                performer=metadata["performer"],
+                                title=metadata["title"],
+                                thumb=thumb_image,
+                                disable_notification=True,
+                                progress=progress_for_pyrogram,
+                                progress_args=progress_args,
+                            )
+                            uploaded = True
+                        except (FloodWait, FileNotFoundError, TransferCancelled):
+                            raise  # Let the outer handler deal with these
+                        except Exception as e:
+                            LOGGER.warning(f"Audio upload failed for {doc_f}: {e}")
+
+                    elif m_type == "video":
+                        try:
+                            vid_duration = await run_shell_cmds(
+                                f'ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "{doc_f}"'
+                            )
+                            try:
+                                duration = int(float(vid_duration))
+                            except (ValueError, TypeError):
+                                duration = 0
+
+                            # Generate thumbnail if user doesn't have a custom one
+                            vid_thumb = thumb_image
+                            if not vid_thumb:
+                                thmb_pth = f"{Config.THUMB_LOCATION}/thumbnail_{os.path.basename(doc_f)}.jpg"
+                                try:
+                                    if os.path.exists(thmb_pth):
+                                        os.remove(thmb_pth)
+                                    if duration > 0:
+                                        midpoint = duration // 2
+                                        await run_shell_cmds(
+                                            f'ffmpeg -ss {midpoint} -i "{doc_f}" -vf "scale=320:320:force_original_aspect_ratio=decrease" -frames:v 1 -update 1 "{thmb_pth}"'
+                                        )
+                                    # Validate the thumbnail is real (not empty/corrupted)
+                                    if os.path.exists(thmb_pth) and os.path.getsize(thmb_pth) > 0:
+                                        vid_thumb = thmb_pth
+                                    else:
+                                        vid_thumb = str(Config.BOT_THUMB)
+                                except Exception:
+                                    vid_thumb = str(Config.BOT_THUMB)
+
+                            await unzip_bot.send_video(
+                                chat_id=c_id,
+                                video=doc_f,
+                                caption=Messages.EXT_CAPTION.format(fname),
+                                duration=duration,
+                                thumb=vid_thumb,
+                                disable_notification=True,
+                                progress=progress_for_pyrogram,
+                                progress_args=progress_args,
+                            )
+                            uploaded = True
+
+                            # Clean up generated thumbnail
+                            if vid_thumb and vid_thumb != thumb_image and vid_thumb != str(Config.BOT_THUMB):
+                                try:
+                                    os.remove(vid_thumb)
+                                except:
+                                    pass
+                        except (FloodWait, FileNotFoundError, TransferCancelled):
+                            raise
+                        except Exception as e:
+                            LOGGER.warning(f"Video upload failed for {doc_f}: {e}")
 
             # Fallback: send as document (also used for non-media mode)
             if not uploaded:
@@ -432,6 +443,8 @@ async def rm_mark_chars(text: str):
     return re.sub("[*`_]", "", text)
 
 
+from unzipper.helpers.unzip_help import edit_ui_message, send_ui_message
+
 # Function to answer queries
 async def answer_query(
     query, message_text: str, answer_only: bool = False, unzip_client=None, buttons=None
@@ -440,20 +453,20 @@ async def answer_query(
         if answer_only:
             await query.answer(await rm_mark_chars(message_text), show_alert=True)
         else:
-            await query.message.edit(message_text, reply_markup=buttons)
+            await edit_ui_message(query.message, message_text, reply_markup=buttons)
     except:
         try:
             if unzip_client:
-                await unzip_client.send_message(
-                    chat_id=query.message.chat.id,
-                    text=message_text,
-                    reply_markup=buttons,
+                await send_ui_message(
+                    query.message,
+                    message_text,
+                    reply_markup=buttons
                 )
             else:
-                await unzipperbot.send_message(
-                    chat_id=query.message.chat.id,
-                    text=message_text,
-                    reply_markup=buttons,
+                await send_ui_message(
+                    query.message,
+                    message_text,
+                    reply_markup=buttons
                 )
         except:
             pass
